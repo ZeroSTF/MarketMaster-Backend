@@ -18,18 +18,13 @@ import tn.zeros.marketmaster.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService implements UserDetailsService {
+public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenService jwtTokenService;
     private final UserRepository userRepository;
     private final TokenStorageService tokenStorageService;
     private final UserService userService;
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-    }
+    private final UserDetailsService userDetailsService;
 
     public TokenResponseDTO authenticate(LoginRequestDTO loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -68,5 +63,9 @@ public class AuthenticationService implements UserDetailsService {
 
     public String getUsernameFromToken(String token) {
         return jwtTokenService.extractUsername(token.replace("Bearer ", ""));
+    }
+
+    public UserDetails loadUserByUsername(String username) {
+        return userDetailsService.loadUserByUsername(username);
     }
 }
