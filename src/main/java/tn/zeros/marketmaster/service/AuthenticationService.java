@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.LoginRequestDTO;
+import tn.zeros.marketmaster.dto.SignupRequestDTO;
 import tn.zeros.marketmaster.dto.TokenResponseDTO;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.TokenValidationException;
@@ -22,6 +23,7 @@ public class AuthenticationService implements UserDetailsService {
     private final JwtTokenService jwtTokenService;
     private final UserRepository userRepository;
     private final TokenStorageService tokenStorageService;
+    private final UserService userService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -58,5 +60,13 @@ public class AuthenticationService implements UserDetailsService {
     public void logout(String username) {
         tokenStorageService.removeRefreshToken(username);
         SecurityContextHolder.clearContext();
+    }
+
+    public User signup(SignupRequestDTO signupRequest) {
+        return userService.signup(signupRequest);
+    }
+
+    public String getUsernameFromToken(String token) {
+        return jwtTokenService.extractUsername(token.replace("Bearer ", ""));
     }
 }

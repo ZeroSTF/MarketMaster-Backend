@@ -7,10 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import tn.zeros.marketmaster.dto.LoginRequestDTO;
+import tn.zeros.marketmaster.dto.SignupRequestDTO;
 import tn.zeros.marketmaster.dto.TokenResponseDTO;
 import tn.zeros.marketmaster.dto.RefreshTokenRequestDTO;
+import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.CustomAuthenticationException;
 import tn.zeros.marketmaster.exception.TokenValidationException;
+import tn.zeros.marketmaster.exception.UserAlreadyExistsException;
 import tn.zeros.marketmaster.service.AuthenticationService;
 
 @RestController
@@ -19,6 +22,13 @@ import tn.zeros.marketmaster.service.AuthenticationService;
 @Slf4j
 public class AuthController {
     private final AuthenticationService authenticationService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<User> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
+        log.info("Attempting signup for user: {}", signupRequest.getEmail());
+        User user = authenticationService.signup(signupRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
@@ -51,6 +61,12 @@ public class AuthController {
     public ResponseEntity<String> handleTokenValidationException(TokenValidationException e) {
         log.error("Token validation error: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<String> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
+        log.error("User registration error: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
