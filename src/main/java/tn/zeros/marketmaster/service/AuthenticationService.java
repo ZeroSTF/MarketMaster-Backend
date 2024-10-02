@@ -7,21 +7,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.LoginRequestDTO;
 import tn.zeros.marketmaster.dto.SignupRequestDTO;
 import tn.zeros.marketmaster.dto.TokenResponseDTO;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.TokenValidationException;
-import tn.zeros.marketmaster.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenService jwtTokenService;
-    private final UserRepository userRepository;
     private final TokenStorageService tokenStorageService;
     private final UserService userService;
     private final UserDetailsService userDetailsService;
