@@ -1,0 +1,21 @@
+meta {
+  name: Signup
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/api/auth/signup
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstName": "riadh",
+    "lastName": "chnitir",
+    "email": "riadh@esprit.tn",
+    "password": "password"
+    
+  }
+}
