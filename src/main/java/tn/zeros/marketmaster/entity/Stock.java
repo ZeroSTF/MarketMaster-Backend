@@ -31,10 +31,9 @@ public class Stock {
     @Column(nullable = false)
     private Double volatility;  // A measure of how much the asset's price fluctuates
 
-    @Column(nullable = false)
-    private String assetType;  // Type of asset (e.g., stock, bond, cryptocurrency)
+
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "profile_id", referencedColumnName = "id")
-    private Portfolio profile;  // Reference to the Profile that holds this asset
+    @JoinColumn(name = "portfolio_id", referencedColumnName = "id")
+    private Portfolio portfolio;  // Reference to the Profile that holds this asset
 }
