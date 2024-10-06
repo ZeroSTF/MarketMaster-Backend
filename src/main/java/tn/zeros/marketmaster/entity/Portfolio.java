@@ -1,10 +1,13 @@
 package tn.zeros.marketmaster.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Builder
 @NoArgsConstructor
@@ -24,9 +27,21 @@ public class Portfolio {
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Holding> holdings;
 
-    private Double totalValue;
+    @ElementCollection
+    @CollectionTable(name = "portfolio_total_value", joinColumns = @JoinColumn(name = "portfolio_id"))
+    @MapKeyColumn(name = "date") // Column for the date key in the map
+    @MapKeyTemporal(TemporalType.DATE) // Ensures the key is stored as a date
+    @Column(name = "value") // Column for the map values (Double)
+    private Map<LocalDateTime, Double> totalValue;
 
+    @Min(0)
+    @Max(100)
+    private Double annualReturn;
+    private Long currentRank;
+
+    private Double cash;
     private String currency; // Optional for tracking portfolio currency (e.g., USD, EUR)
+    private Double changeOfToday;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
