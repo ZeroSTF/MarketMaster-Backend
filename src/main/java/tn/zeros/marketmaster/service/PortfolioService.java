@@ -2,6 +2,7 @@ package tn.zeros.marketmaster.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.ServiceInterface.IPortfolioService;
 import tn.zeros.marketmaster.entity.Holding;
@@ -25,14 +26,14 @@ public class PortfolioService implements IPortfolioService {
     private final HoldingRepository holdingRepository;
 
 @Override //Calculate Gain For User
-    public Double calculatePortfolioGainForUser(Long userId) {
+    public double calculatePortfolioGainForUser(Long userId) {
     // Fetch the portfolio by user ID
     Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
 
     if (portfolioOptional.isPresent()) {
         Portfolio portfolio = portfolioOptional.get();
         List<Holding> holdings = portfolio.getHoldings();
-        Double s = 0D;
+        double s = 0D;
         for (Holding h : holdings) {
             s += (h.getCurrentValue() - h.getPurchasePrice()) * h.getQuantity();
         }
@@ -43,14 +44,14 @@ public class PortfolioService implements IPortfolioService {
 
 }
     @Override //Calculate Holding For User
-    public Double calculatePortfolioHolding(Long userId) {
+    public double calculatePortfolioHolding(Long userId) {
 
         Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
 
         if (portfolioOptional.isPresent()) {
             Portfolio portfolio = portfolioOptional.get();
             List<Holding> holdings = portfolio.getHoldings();
-            Double s = 0D;
+            double s = 0D;
             for (Holding h : holdings) {
                 s += h.getPurchasePrice() * h.getQuantity();
             }
@@ -64,46 +65,61 @@ public class PortfolioService implements IPortfolioService {
     public void updatePortfolio(Long userId) {
 
         // Fetch the portfolio by the user's ID
-        Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
-        if (portfolioOptional.isPresent()) {
-            Portfolio portfolio = portfolioOptional.get();
-            portfolio.setCurrentRank(portfolioRepository.getRankByUserId(userId));
-            LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-            LocalDateTime yearAgo = today.minusDays(365);
-            Double todayValue = portfolio.getTotalValue().get(today);
-            Double yearAgoValue =portfolio.getTotalValue().get(portfolio.getCreatedAt());
+    Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
+    if (portfolioOptional.isPresent()) {
+        Portfolio portfolio = portfolioOptional.get();
 
-            //update rank
-            portfolio.setCurrentRank(portfolioRepository.getRankByUserId(userId));
+        // Set the current rank
+        portfolio.setCurrentRank(portfolioRepository.getRankByUserId(userId));
 
+        // Define the dates: today and a year ago
+        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime yearAgo = today.minusDays(365);
 
-            //change Cash
-            portfolio.setCash(todayValue-calculatePortfolioHolding(userId));
+        // Fetch today's value from the totalValue map
+        Double todayValue = portfolio.getTotalValue().get(today);
 
-            //change ChangeOfToday
-            portfolio.setChangeOfToday(calculatePortfolioGainForUser(userId));
-
-            //Change  AnnualReturn
-            if ( portfolio.getTotalValue().get(yearAgo) !=null){
-                yearAgoValue = portfolio.getTotalValue().get(yearAgo);
-            }
-            if (todayValue != null && yearAgoValue != null) {
-                Double total = todayValue - yearAgoValue;
-                Double pourcentage = (total *100)/yearAgoValue;
-                portfolio.setAnnualReturn(pourcentage);
-                portfolioRepository.save(portfolio);
-            } else {
-                portfolio.setAnnualReturn(null);
-                portfolioRepository.save(portfolio);
-            }
-        } else {
-            // Handle case where portfolio is not found for the user ID
-            throw new RuntimeException("Portfolio not found for user ID: " + userId);
+        // If no value exists for 'today', set it to 0
+        if (todayValue == null) {
+            todayValue = 0D;
         }
+
+        // Fetch the value from a year ago, default to the portfolio creation date if necessary
+        Double yearAgoValue = portfolio.getTotalValue().get(yearAgo);
+        if (yearAgoValue == null) {
+            yearAgoValue = portfolio.getTotalValue().get(portfolio.getCreatedAt());
+        }
+
+        // Update rank again
+        portfolio.setCurrentRank(portfolioRepository.getRankByUserId(userId));
+
+        // Update cash by subtracting the calculated holding value from today's total value
+        portfolio.setCash(todayValue - calculatePortfolioHolding(userId));
+
+        // Update the change of today using the calculated gain
+        portfolio.setChangeOfToday(calculatePortfolioGainForUser(userId));
+
+        // Calculate the annual return if both values are available
+        if (todayValue != null && yearAgoValue != null && yearAgoValue != 0) {
+            double total = todayValue - yearAgoValue;
+            double percentage = (total * 100) / yearAgoValue;
+            // Ensure percentage is non-negative
+            portfolio.setAnnualReturn(Math.max(percentage, 0));
+        } else {
+            portfolio.setAnnualReturn(0D);
+        }
+
+        // Save the portfolio updates
+        portfolioRepository.save(portfolio);
+
+    } else {
+        // Handle case where portfolio is not found for the user ID
+        throw new RuntimeException("Portfolio not found for user ID: " + userId);
+    }
     }
 @Override //Add New Portfolio For User
     public void newPortfolio(Long userId){
-    User U= userRepository.getById(userId);
+    User U= userRepository.findById(userId).orElseThrow(() ->new UsernameNotFoundException("No user found"));
     Portfolio p =new Portfolio();
     p.setTotalValue(new HashMap<>()); // Initialize the map
     p.getTotalValue().put(LocalDateTime.now(), 100000D);
@@ -111,10 +127,9 @@ public class PortfolioService implements IPortfolioService {
     p.setAnnualReturn(0.0D);
     p.setCurrentRank(portfolioRepository.getRankByUserId(userId));
     //List<Holding> H= new ArrayList<>();
-    Holding h = new Holding();
-    p.getHoldings().add(h);
+    p.setHoldings(new ArrayList<>());
+    p.setUser(U);
     portfolioRepository.save(p);
-    U.setPortfolio(p);
     userRepository.save(U);
 }
 

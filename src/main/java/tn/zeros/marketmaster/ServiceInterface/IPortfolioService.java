@@ -6,11 +6,11 @@ public interface IPortfolioService {
 
 
     //Calculate Gain For User
-    Double calculatePortfolioHolding(Long userId);
+    double calculatePortfolioHolding(Long userId);
 
     void updatePortfolio(Long userId);
 
     void newPortfolio(Long userId);
 
-    Double calculatePortfolioGainForUser(Long userId);
+    double calculatePortfolioGainForUser(Long userId);
 }

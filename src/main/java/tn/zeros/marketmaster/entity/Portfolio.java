@@ -30,18 +30,16 @@ public class Portfolio {
     @ElementCollection
     @CollectionTable(name = "portfolio_total_value", joinColumns = @JoinColumn(name = "portfolio_id"))
     @MapKeyColumn(name = "date") // Column for the date key in the map
-    @MapKeyTemporal(TemporalType.DATE) // Ensures the key is stored as a date
     @Column(name = "value") // Column for the map values (Double)
     private Map<LocalDateTime, Double> totalValue;
 
     @Min(0)
-    @Max(100)
-    private Double annualReturn;
+    private double annualReturn;
     private Long currentRank;
 
-    private Double cash;
+    private double cash;
     private String currency; // Optional for tracking portfolio currency (e.g., USD, EUR)
-    private Double changeOfToday;
+    private double changeOfToday;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
