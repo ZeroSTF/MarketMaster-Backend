@@ -1,10 +1,8 @@
 package tn.zeros.marketmaster.service;
 
 import lombok.AllArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import tn.zeros.marketmaster.ServiceInterface.IPortfolioService;
 import tn.zeros.marketmaster.entity.Holding;
 import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.entity.User;
@@ -20,12 +18,12 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
-public class PortfolioService implements IPortfolioService {
+public class PortfolioService  {
     private final PortfolioRepository portfolioRepository;
     private final UserRepository userRepository;
     private final HoldingRepository holdingRepository;
 
-@Override //Calculate Gain For User
+ //Calculate Gain For User
     public double calculatePortfolioGainForUser(Long userId) {
     // Fetch the portfolio by user ID
     Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
@@ -43,7 +41,7 @@ public class PortfolioService implements IPortfolioService {
     }
 
 }
-    @Override //Calculate Holding For User
+   //Calculate Holding For User
     public double calculatePortfolioHolding(Long userId) {
 
         Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
@@ -61,8 +59,8 @@ public class PortfolioService implements IPortfolioService {
         }
 
     }
-@Override //Update Portfolio
-    public void updatePortfolio(Long userId) {
+ //Update Portfolio
+    public Portfolio updatePortfolio(Long userId) {
 
         // Fetch the portfolio by the user's ID
     Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
@@ -110,15 +108,15 @@ public class PortfolioService implements IPortfolioService {
         }
 
         // Save the portfolio updates
-        portfolioRepository.save(portfolio);
+        return  portfolioRepository.save(portfolio);
 
     } else {
         // Handle case where portfolio is not found for the user ID
         throw new RuntimeException("Portfolio not found for user ID: " + userId);
     }
     }
-@Override //Add New Portfolio For User
-    public void newPortfolio(Long userId){
+//Add New Portfolio For User
+    public Portfolio newPortfolio(Long userId){
     User U= userRepository.findById(userId).orElseThrow(() ->new UsernameNotFoundException("No user found"));
     Portfolio p =new Portfolio();
     p.setTotalValue(new HashMap<>()); // Initialize the map
@@ -129,8 +127,8 @@ public class PortfolioService implements IPortfolioService {
     //List<Holding> H= new ArrayList<>();
     p.setHoldings(new ArrayList<>());
     p.setUser(U);
-    portfolioRepository.save(p);
     userRepository.save(U);
+    return  portfolioRepository.save(p);
 }
 
 
