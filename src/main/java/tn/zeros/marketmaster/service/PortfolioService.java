@@ -3,6 +3,7 @@ package tn.zeros.marketmaster.service;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import tn.zeros.marketmaster.dto.PortfolioDTO;
 import tn.zeros.marketmaster.entity.Holding;
 import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.entity.User;
@@ -60,7 +61,7 @@ public class PortfolioService  {
 
     }
  //Update Portfolio
-    public Portfolio updatePortfolio(Long userId) {
+    public PortfolioDTO updatePortfolio(Long userId) {
 
         // Fetch the portfolio by the user's ID
     Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
@@ -108,7 +109,8 @@ public class PortfolioService  {
         }
 
         // Save the portfolio updates
-        return  portfolioRepository.save(portfolio);
+        Portfolio updatedPortfolio = portfolioRepository.save(portfolio);
+        return PortfolioDTO.fromEntity(updatedPortfolio);
 
     } else {
         // Handle case where portfolio is not found for the user ID
@@ -116,19 +118,19 @@ public class PortfolioService  {
     }
     }
 //Add New Portfolio For User
-    public Portfolio newPortfolio(Long userId){
-    User U= userRepository.findById(userId).orElseThrow(() ->new UsernameNotFoundException("No user found"));
-    Portfolio p =new Portfolio();
-    p.setTotalValue(new HashMap<>()); // Initialize the map
-    p.getTotalValue().put(LocalDateTime.now(), 100000D);
-    p.setCash(100000D);
-    p.setAnnualReturn(0.0D);
-    p.setCurrentRank(portfolioRepository.getRankByUserId(userId));
-    //List<Holding> H= new ArrayList<>();
-    p.setHoldings(new ArrayList<>());
-    p.setUser(U);
-    userRepository.save(U);
-    return  portfolioRepository.save(p);
+    public PortfolioDTO newPortfolio(Long userId){
+    User user= userRepository.findById(userId).orElseThrow(() ->new UsernameNotFoundException("No user found"));
+        Portfolio portfolio = new Portfolio();
+        portfolio.setTotalValue(new HashMap<>());
+        portfolio.getTotalValue().put(LocalDateTime.now(), 100000D);
+        portfolio.setCash(100000D);
+        portfolio.setAnnualReturn(0.0D);
+        portfolio.setCurrentRank(portfolioRepository.getRankByUserId(userId));
+        portfolio.setHoldings(new ArrayList<>());
+        portfolio.setUser(user);
+
+        Portfolio savedPortfolio = portfolioRepository.save(portfolio);
+        return PortfolioDTO.fromEntity(savedPortfolio);
 }
 
 

@@ -6,8 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import tn.zeros.marketmaster.dto.PortfolioDTO;
 import tn.zeros.marketmaster.entity.Portfolio;
-import tn.zeros.marketmaster.exception.PortfolioException;
+import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.service.PortfolioService;
 
 @RestController
@@ -17,28 +18,33 @@ import tn.zeros.marketmaster.service.PortfolioService;
 public class PortfolioController {
     private final PortfolioService portfolioService;
 
-    @PutMapping("/update/{userId}")
-    public Portfolio updatePortfolio(@PathVariable Long userId) {
-
+    @PutMapping("update/{userId}")
+    public ResponseEntity<PortfolioDTO> updatePortfolio(@PathVariable Long userId) {
+        log.info("Updating portfolio for user ID: {}", userId);
         try {
-            return portfolioService.updatePortfolio(userId);
-        } catch (PortfolioException e) {
-            throw new PortfolioException("Portfolio not found for user ID: " + userId);
+            PortfolioDTO updatedPortfolio = portfolioService.updatePortfolio(userId);
+            return ResponseEntity.ok(updatedPortfolio);
+        } catch (PortfolioNotFoundException e) {
+            log.error("Portfolio not found for user ID: {}", userId, e);
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            throw new RuntimeException("Error updating portfolio for user ID: " + userId);
+            log.error("Error updating portfolio for user ID: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
     }
 
-    @PutMapping("/new/{userId}")
-    public Portfolio newPortfolio(@PathVariable Long userId) {
-
+    @PostMapping("new/{userId}")
+    public ResponseEntity<PortfolioDTO> createNewPortfolio(@PathVariable Long userId) {
+        log.info("Creating new portfolio for user ID: {}", userId);
         try {
-            return portfolioService.newPortfolio(userId);
+            PortfolioDTO newPortfolio = portfolioService.newPortfolio(userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newPortfolio);
         } catch (UsernameNotFoundException e) {
-            throw new UsernameNotFoundException("User not found with ID: " + userId);
+            log.error("User not found with ID: {}", userId, e);
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            throw new RuntimeException("Error creating new portfolio for user ID: " + userId);
+            log.error("Error creating new portfolio for user ID: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
