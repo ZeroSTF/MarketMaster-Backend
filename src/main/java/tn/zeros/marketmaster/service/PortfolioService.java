@@ -7,7 +7,6 @@ import tn.zeros.marketmaster.dto.PortfolioDTO;
 import tn.zeros.marketmaster.entity.Holding;
 import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.entity.User;
-import tn.zeros.marketmaster.repository.HoldingRepository;
 import tn.zeros.marketmaster.repository.PortfolioRepository;
 import tn.zeros.marketmaster.repository.UserRepository;
 
@@ -22,7 +21,6 @@ import java.util.Optional;
 public class PortfolioService  {
     private final PortfolioRepository portfolioRepository;
     private final UserRepository userRepository;
-    private final HoldingRepository holdingRepository;
 
  //Calculate Gain For User
     public double calculatePortfolioGainForUser(Long userId) {

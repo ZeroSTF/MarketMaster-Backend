@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
-import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.service.PortfolioService;
 
