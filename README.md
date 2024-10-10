@@ -6,18 +6,26 @@ This project is the backend of the MarketMaster application. It is a REST API bu
 
 ### To compile the project
 
-```
+```bash
 ./mvnw clean install
 ```
 
 ### To run the project
 
-```
-./mvnw spring-boot:run
-```
-
-## Or run the compiled jar file
-
-```
+```bash
 java -jar target/marketmaster-backend-0.0.1-SNAPSHOT.jar
+```
+
+## Using Docker
+
+To build the Docker image, run the following command:
+
+```bash
+docker build -t marketmaster-backend .
+```
+
+To run the Docker image, run the following command:
+
+```bash
+docker run -p 8081:8081 marketmaster-backend
 ```
