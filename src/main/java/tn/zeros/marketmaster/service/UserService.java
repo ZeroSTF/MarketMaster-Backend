@@ -21,6 +21,7 @@ public class UserService {
         }
 
         User user = User.builder()
+                .username(signupRequest.getFirstName())
                 .firstName(signupRequest.getFirstName())
                 .lastName(signupRequest.getLastName())
                 .email(signupRequest.getEmail())

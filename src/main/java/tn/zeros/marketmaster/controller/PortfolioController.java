@@ -1,14 +1,16 @@
 package tn.zeros.marketmaster.controller;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.service.PortfolioService;
+
+import java.time.Duration;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,33 +19,48 @@ import tn.zeros.marketmaster.service.PortfolioService;
 public class PortfolioController {
     private final PortfolioService portfolioService;
 
-    @PutMapping("update/{userId}")
-    public ResponseEntity<PortfolioDTO> updatePortfolio(@PathVariable Long userId) {
-        log.info("Updating portfolio for user ID: {}", userId);
+    @PostMapping
+    public ResponseEntity<PortfolioDTO> createPortfolio(@RequestBody PortfolioDTO portfolioDTO) {
         try {
-            PortfolioDTO updatedPortfolio = portfolioService.updatePortfolio(userId);
-            return ResponseEntity.ok(updatedPortfolio);
-        } catch (PortfolioNotFoundException e) {
-            log.error("Portfolio not found for user ID: {}", userId, e);
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Error updating portfolio for user ID: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            PortfolioDTO createdPortfolio = portfolioService.newPortfolio(portfolioDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdPortfolio);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @PostMapping("new/{userId}")
-    public ResponseEntity<PortfolioDTO> createNewPortfolio(@PathVariable Long userId) {
-        log.info("Creating new portfolio for user ID: {}", userId);
+    @PutMapping("/{id}")
+    public ResponseEntity<PortfolioDTO> updatePortfolio(@PathVariable Long id, @RequestBody PortfolioDTO portfolioDTO) {
         try {
-            PortfolioDTO newPortfolio = portfolioService.newPortfolio(userId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(newPortfolio);
-        } catch (UsernameNotFoundException e) {
-            log.error("User not found with ID: {}", userId, e);
+            portfolioDTO.setId(id);
+            PortfolioDTO updatedPortfolio = portfolioService.updatePortfolio(portfolioDTO);
+            return ResponseEntity.ok(updatedPortfolio);
+        } catch (PortfolioNotFoundException e) {
             return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Error creating new portfolio for user ID: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{id}/holding-value")
+    public ResponseEntity<Double> getPortfolioHoldingValue(@PathVariable Long id) {
+        try {
+            double value = portfolioService.calculatePortfolioHolding(id);
+            return ResponseEntity.ok(value);
+        } catch (PortfolioNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/gain-loss")
+    public ResponseEntity<Double> getPortfolioGainLoss(
+            @PathVariable Long id,
+            @RequestParam Duration duration) {
+        try {
+            double gainLoss = portfolioService.calculateGainLoss(id, duration);
+            return ResponseEntity.ok(gainLoss);
+        } catch (PortfolioNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 

@@ -1,6 +1,6 @@
 package tn.zeros.marketmaster.entity.enums;
 
-public enum TradeType {
+public enum TransactionType {
     BUY,
     SELL
 }
