@@ -1,136 +1,144 @@
 package tn.zeros.marketmaster.service;
 
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import tn.zeros.marketmaster.dto.HoldingDTO;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
+import tn.zeros.marketmaster.entity.Asset;
 import tn.zeros.marketmaster.entity.Holding;
 import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.entity.User;
+import tn.zeros.marketmaster.exception.AssetNotFoundException;
+import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
+import tn.zeros.marketmaster.exception.UserNotFoundException;
+import tn.zeros.marketmaster.repository.AssetRepository;
 import tn.zeros.marketmaster.repository.PortfolioRepository;
 import tn.zeros.marketmaster.repository.UserRepository;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
 public class PortfolioService  {
     private final PortfolioRepository portfolioRepository;
     private final UserRepository userRepository;
+    private final AssetRepository assetRepository;
 
- //Calculate Gain For User
-    public double calculatePortfolioGainForUser(Long userId) {
-    // Fetch the portfolio by user ID
-    Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
+    private final AssetService assetService;
 
-    if (portfolioOptional.isPresent()) {
-        Portfolio portfolio = portfolioOptional.get();
-        List<Holding> holdings = portfolio.getHoldings();
-        double s = 0D;
-        for (Holding h : holdings) {
-            s += (h.getCurrentValue() - h.getPurchasePrice()) * h.getQuantity();
+    public double calculateGainLoss(Long userId, Duration duration) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Portfolio portfolio = user.getPortfolio();
+
+        if (portfolio == null || portfolio.getTotalValue().isEmpty()) {
+            return 0.0;
         }
-        return s;
-    } else {
-        throw new RuntimeException("Portfolio not found for user ID: " + userId);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = now.minus(duration);
+
+        Map<LocalDateTime, Double> totalValue = portfolio.getTotalValue();
+
+        Map.Entry<LocalDateTime, Double> startEntry = totalValue.entrySet().stream()
+                .filter(entry -> !entry.getKey().isAfter(startDate))
+                .max(Map.Entry.comparingByKey())
+                .orElse(null);
+
+        Map.Entry<LocalDateTime, Double> endEntry = totalValue.entrySet().stream()
+                .max(Map.Entry.comparingByKey())
+                .orElse(null);
+
+        if (startEntry == null || endEntry == null) {
+            return 0.0;
+        }
+
+        double startValue = startEntry.getValue();
+        double endValue = endEntry.getValue();
+
+        return endValue - startValue;
     }
 
-}
-   //Calculate Holding For User
     public double calculatePortfolioHolding(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
+        Portfolio portfolio = user.getPortfolio();
 
-        if (portfolioOptional.isPresent()) {
-            Portfolio portfolio = portfolioOptional.get();
-            List<Holding> holdings = portfolio.getHoldings();
-            double s = 0D;
-            for (Holding h : holdings) {
-                s += h.getPurchasePrice() * h.getQuantity();
-            }
-            return s;
-        } else {
-            throw new RuntimeException("Portfolio not found for user ID: " + userId);
+        if (portfolio == null || portfolio.getHoldings().isEmpty()) {
+            return 0.0;
         }
 
+        double totalHoldingValue = portfolio.getHoldings().stream()
+                .mapToDouble(holding -> {
+                    Asset asset = holding.getAsset();
+                    int quantity = holding.getQuantity();
+                    double currentPrice = assetService.getCurrentPrice(asset.getId());
+                    return quantity * currentPrice;
+                })
+                .sum();
+
+        totalHoldingValue += portfolio.getCash();
+
+        return totalHoldingValue;
     }
- //Update Portfolio
-    public PortfolioDTO updatePortfolio(Long userId) {
 
-        // Fetch the portfolio by the user's ID
-    Optional<Portfolio> portfolioOptional = portfolioRepository.findByUserId(userId);
-    if (portfolioOptional.isPresent()) {
-        Portfolio portfolio = portfolioOptional.get();
+    public PortfolioDTO updatePortfolio(PortfolioDTO portfolioDTO) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioDTO.getId())
+                .orElseThrow(() -> new PortfolioNotFoundException("Portfolio not found"));
 
-        // Set the current rank
-        portfolio.setCurrentRank(portfolioRepository.getRankByUserId(userId));
+        portfolio.setCash(portfolioDTO.getCash());
 
-        // Define the dates: today and a year ago
-        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime yearAgo = today.minusDays(365);
+        Set<Holding> updatedHoldings = new HashSet<>();
+        for (HoldingDTO holdingDTO : portfolioDTO.getHoldings()) {
+            Holding holding = portfolio.getHoldings().stream()
+                    .filter(h -> h.getId().equals(holdingDTO.getId()))
+                    .findFirst()
+                    .orElseGet(Holding::new);
 
-        // Fetch today's value from the totalValue map
-        Double todayValue = portfolio.getTotalValue().get(today);
+            holding.setQuantity(holdingDTO.getQuantity());
+            holding.setPortfolio(portfolio);
+            holding.setAsset(assetRepository.findById(holdingDTO.getAssetId())
+                    .orElseThrow(() -> new AssetNotFoundException("Asset not found")));
 
-        // If no value exists for 'today', set it to 0
-        if (todayValue == null) {
-            todayValue = 0D;
+            updatedHoldings.add(holding);
         }
+        portfolio.setHoldings(updatedHoldings);
 
-        // Fetch the value from a year ago, default to the portfolio creation date if necessary
-        Double yearAgoValue = portfolio.getTotalValue().get(yearAgo);
-        if (yearAgoValue == null) {
-            yearAgoValue = portfolio.getTotalValue().get(portfolio.getCreatedAt());
-        }
+        // Update total value
+        portfolio.setTotalValue(portfolioDTO.getTotalValue());
 
-        // Update rank again
-        portfolio.setCurrentRank(portfolioRepository.getRankByUserId(userId));
-
-        // Update cash by subtracting the calculated holding value from today's total value
-        portfolio.setCash(todayValue - calculatePortfolioHolding(userId));
-
-        // Update the change of today using the calculated gain
-        portfolio.setChangeOfToday(calculatePortfolioGainForUser(userId));
-
-        // Calculate the annual return if both values are available
-        if (todayValue != null && yearAgoValue != null && yearAgoValue != 0) {
-            double total = todayValue - yearAgoValue;
-            double percentage = (total * 100) / yearAgoValue;
-            // Ensure percentage is non-negative
-            portfolio.setAnnualReturn(Math.max(percentage, 0));
-        } else {
-            portfolio.setAnnualReturn(0D);
-        }
-
-        // Save the portfolio updates
         Portfolio updatedPortfolio = portfolioRepository.save(portfolio);
         return PortfolioDTO.fromEntity(updatedPortfolio);
+    }
 
-    } else {
-        // Handle case where portfolio is not found for the user ID
-        throw new RuntimeException("Portfolio not found for user ID: " + userId);
-    }
-    }
-//Add New Portfolio For User
-    public PortfolioDTO newPortfolio(Long userId){
-    User user= userRepository.findById(userId).orElseThrow(() ->new UsernameNotFoundException("No user found"));
+    public PortfolioDTO newPortfolio(PortfolioDTO portfolioDTO) {
+        User user = userRepository.findById(portfolioDTO.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         Portfolio portfolio = new Portfolio();
-        portfolio.setTotalValue(new HashMap<>());
-        portfolio.getTotalValue().put(LocalDateTime.now(), 100000D);
-        portfolio.setCash(100000D);
-        portfolio.setAnnualReturn(0.0D);
-        portfolio.setCurrentRank(portfolioRepository.getRankByUserId(userId));
-        portfolio.setHoldings(new ArrayList<>());
         portfolio.setUser(user);
+        portfolio.setCash(portfolioDTO.getCash());
+
+        Set<Holding> holdings = new HashSet<>();
+        for (HoldingDTO holdingDTO : portfolioDTO.getHoldings()) {
+            Holding holding = new Holding();
+            holding.setQuantity(holdingDTO.getQuantity());
+            holding.setPortfolio(portfolio);
+            holding.setAsset(assetRepository.findById(holdingDTO.getAssetId())
+                    .orElseThrow(() -> new AssetNotFoundException("Asset not found")));
+            holdings.add(holding);
+        }
+        portfolio.setHoldings(holdings);
+
+        portfolio.setTotalValue(portfolioDTO.getTotalValue());
 
         Portfolio savedPortfolio = portfolioRepository.save(portfolio);
         return PortfolioDTO.fromEntity(savedPortfolio);
-}
-
+    }
 
 
 }

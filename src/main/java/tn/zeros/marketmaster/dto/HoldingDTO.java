@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import tn.zeros.marketmaster.entity.Holding;
 
-import java.time.LocalDateTime;
 @Data
 @Builder
 @NoArgsConstructor
@@ -14,24 +13,26 @@ import java.time.LocalDateTime;
 public class HoldingDTO {
     private Long id;
     private Long portfolioId;
-    private Long stockId;
-    private String stockSymbol;  // Added for convenience
-    private String stockName;    // Added for convenience
+    private Long assetId;
+    private String assetSymbol;
+    private String assetName;
     private Integer quantity;
-    private Double purchasePrice;
-    private Double currentValue;
-    private LocalDateTime purchasedAt;
+
     public static HoldingDTO fromEntity(Holding holding) {
         return HoldingDTO.builder()
                 .id(holding.getId())
-                .portfolioId(holding.getPortfolio().getId())
-                .stockId(holding.getStock().getId())
-                .stockSymbol(holding.getStock().getSymbol())
-                .stockName(holding.getStock().getName())
+                .portfolioId(holding.getPortfolio() != null ? holding.getPortfolio().getId() : null)
+                .assetId(holding.getAsset() != null ? holding.getAsset().getId() : null)
+                .assetSymbol(holding.getAsset() != null ? holding.getAsset().getSymbol() : null)
+                .assetName(holding.getAsset() != null ? holding.getAsset().getName() : null)
                 .quantity(holding.getQuantity())
-                .purchasePrice(holding.getPurchasePrice())
-                .currentValue(holding.getCurrentValue())
-                .purchasedAt(holding.getPurchasedAt())
                 .build();
+    }
+
+    public Holding toEntity() {
+        Holding holding = new Holding();
+        holding.setId(this.id);
+        holding.setQuantity(this.quantity);
+        return holding;
     }
 }
