@@ -18,8 +18,6 @@ public class Transaction implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "asset_id")
     private Asset asset;
