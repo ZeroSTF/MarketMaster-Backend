@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.LoginRequestDTO;
 import tn.zeros.marketmaster.dto.SignupRequestDTO;
-import tn.zeros.marketmaster.dto.SignupResponseDTO;
+import tn.zeros.marketmaster.dto.UserDTO;
 import tn.zeros.marketmaster.dto.TokenResponseDTO;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.CustomAuthenticationException;
@@ -61,9 +61,9 @@ public class AuthenticationService {
         SecurityContextHolder.clearContext();
     }
 
-    public SignupResponseDTO signup(SignupRequestDTO signupRequest) {
+    public UserDTO signup(SignupRequestDTO signupRequest) {
         User user = userService.signup(signupRequest);
-        return SignupResponseDTO.fromEntity(user);
+        return UserDTO.fromEntity(user);
     }
 
     public String getUsernameFromToken(String token) {

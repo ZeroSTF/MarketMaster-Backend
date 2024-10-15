@@ -6,14 +6,14 @@ import tn.zeros.marketmaster.entity.User;
 
 @Data
 @Builder
-public class SignupResponseDTO {
+public class UserDTO {
     private String username;
     private String firstName;
     private String lastName;
     private String email;
 
-    public static SignupResponseDTO fromEntity(User user) {
-        return SignupResponseDTO.builder()
+    public static UserDTO fromEntity(User user) {
+        return UserDTO.builder()
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
