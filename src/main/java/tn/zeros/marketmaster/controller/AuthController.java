@@ -4,12 +4,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
-import tn.zeros.marketmaster.dto.LoginRequestDTO;
-import tn.zeros.marketmaster.dto.SignupRequestDTO;
-import tn.zeros.marketmaster.dto.TokenResponseDTO;
-import tn.zeros.marketmaster.dto.RefreshTokenRequestDTO;
+import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.CustomAuthenticationException;
 import tn.zeros.marketmaster.exception.TokenValidationException;
@@ -24,10 +23,10 @@ public class AuthController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/signup")
-    public ResponseEntity<User> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
+    public ResponseEntity<SignupResponseDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
         log.info("Attempting signup for user: {}", signupRequest.getEmail());
-        User user = authenticationService.signup(signupRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        SignupResponseDTO signupResponse = authenticationService.signup(signupRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(signupResponse);
     }
 
     @PostMapping("/login")
@@ -51,6 +50,7 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    /////////////////////////////////////////////////////////////////////////////// EXCEPTION HANDLERS /////////////////////////////////////////////////////////////////////////////////////////////////
     @ExceptionHandler(CustomAuthenticationException.class)
     public ResponseEntity<String> handleAuthenticationException(CustomAuthenticationException e) {
         log.error("Authentication error: {}", e.getMessage());
@@ -67,6 +67,18 @@ public class AuthController {
     public ResponseEntity<String> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
         log.error("User registration error: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<String> handleBadCredentialsException(BadCredentialsException e) {
+        log.warn("Login failed: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<String> handleMissingRequestHeaderException(MissingRequestHeaderException e) {
+        log.warn("Missing required header: {}", e.getHeaderName());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required header: " + e.getHeaderName());
     }
 
     @ExceptionHandler(Exception.class)
