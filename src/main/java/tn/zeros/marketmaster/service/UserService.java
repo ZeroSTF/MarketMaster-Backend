@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.SignupRequestDTO;
+import tn.zeros.marketmaster.dto.UserDTO;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.entity.enums.Role;
 import tn.zeros.marketmaster.exception.UserAlreadyExistsException;
+import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.UserRepository;
 
 @Service
@@ -30,5 +32,11 @@ public class UserService {
                 .build();
 
         return userRepository.save(user);
+    }
+
+    public UserDTO getCurrentUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
+        return UserDTO.fromEntity(user);
     }
 }

@@ -9,7 +9,6 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import tn.zeros.marketmaster.dto.*;
-import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.CustomAuthenticationException;
 import tn.zeros.marketmaster.exception.TokenValidationException;
 import tn.zeros.marketmaster.exception.UserAlreadyExistsException;
@@ -23,9 +22,9 @@ public class AuthController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/signup")
-    public ResponseEntity<SignupResponseDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
+    public ResponseEntity<UserDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
         log.info("Attempting signup for user: {}", signupRequest.getEmail());
-        SignupResponseDTO signupResponse = authenticationService.signup(signupRequest);
+        UserDTO signupResponse = authenticationService.signup(signupRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(signupResponse);
     }
 
