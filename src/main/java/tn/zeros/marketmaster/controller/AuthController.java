@@ -29,15 +29,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
         log.info("Attempting login for user: {}", loginRequest.getUsername());
-        try {
-            TokenResponseDTO tokenResponse = authenticationService.authenticate(loginRequest);
-            return ResponseEntity.ok(tokenResponse);
-        } catch (BadCredentialsException e) {
-            log.warn("Login failed for user: {}", loginRequest.getUsername());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
-        }
+        TokenResponseDTO tokenResponse = authenticationService.authenticate(loginRequest);
+        return ResponseEntity.ok(tokenResponse);
     }
 
     @PostMapping("/refresh-token")
@@ -54,6 +49,7 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    //EXCEPTION HANDLERS
     @ExceptionHandler(CustomAuthenticationException.class)
     public ResponseEntity<String> handleAuthenticationException(CustomAuthenticationException e) {
         log.error("Authentication error: {}", e.getMessage());
@@ -70,6 +66,12 @@ public class AuthController {
     public ResponseEntity<String> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
         log.error("User registration error: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<String> handleBadCredentialsException(BadCredentialsException e) {
+        log.warn("Login failed: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
     }
 
     @ExceptionHandler(Exception.class)
