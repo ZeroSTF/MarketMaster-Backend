@@ -30,6 +30,22 @@ To run the Docker image, run the following command:
 docker run -p 8081:8081 marketmaster-backend
 ```
 
+### Using Docker Compose
+
+You can run the entire application, including the MySQL database, with Docker Compose.
+
+To build and start services using Docker Compose:
+
+```bash
+docker-compose up --build
+```
+
+To stop services:
+
+```bash
+docker-compose down
+```
+
 ## Diagrams
 
 The diagrams are written in PlantUML and can be found in the `docs` folder.
