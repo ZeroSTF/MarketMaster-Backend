@@ -221,25 +221,27 @@ package "com.marketSimulator.game" {
     }
 
     class GameParticipation {
-        -id: Long
-        -gameId: Long
-        -userId: Long
-        -joinTimestamp: LocalDateTime
-        -totalPlayTime: Duration
-        -lastResumeTimestamp: LocalDateTime
-        -finalScore: BigDecimal
-        -ranking: Integer
-        +getId(): Long
-        +getJoinTimestamp(): LocalDateTime
-        +getTotalPlayTime(): Duration
-        +updateTotalPlayTime(): void
-        +getLastResumeTimestamp(): LocalDateTime
-        +setLastResumeTimestamp(timestamp: LocalDateTime): void
-        +getFinalScore(): BigDecimal
-        +setFinalScore(score: BigDecimal): void
-        +getRanking(): Integer
-        +setRanking(ranking: Integer): void
-    }
+            -id: Long
+            -gameId: Long
+            -userId: Long
+            -joinTimestamp: LocalDateTime
+            -totalPlayTime: Duration
+            -lastResumeTimestamp: LocalDateTime
+            -lastPauseTimestamp: LocalDateTime
+            -isActive: Boolean
+            +getId(): Long
+            +getGameId(): Long
+            +getUserId(): Long
+            +getJoinTimestamp(): LocalDateTime
+            +getTotalPlayTime(): Duration
+            +updatePlayTime(): void
+            +getLastResumeTimestamp(): LocalDateTime
+            +setLastResumeTimestamp(timestamp: LocalDateTime): void
+            +getLastPauseTimestamp(): LocalDateTime
+            +setLastPauseTimestamp(timestamp: LocalDateTime): void
+            +isActive(): Boolean
+            +setActive(active: Boolean): void
+        }
 
     class GamePortfolio {
         -id: Long
@@ -250,6 +252,16 @@ package "com.marketSimulator.game" {
         +getVirtualCashBalance(): BigDecimal
         +setVirtualCashBalance(balance: BigDecimal): void
     }
+
+    class GameHolding {
+            -id: Long
+            -gamePortfolioId: Long
+            -assetId: Long
+            -quantity: BigDecimal
+            +getId(): Long
+            +getQuantity(): BigDecimal
+            +setQuantity(quantity: BigDecimal): void
+        }
 
     class GameTransaction {
         -id: Long
@@ -336,6 +348,7 @@ Portfolio "1" -- "*" Transaction
 ' Asset relations
 Asset "1" -- "*" Holding
 Asset "1" -- "*" UserWatchlist
+Asset "1" -- "*" Transaction
 
 ' Course relations
 Course "1" -- "*" UserProgress
@@ -362,7 +375,8 @@ User "1" -- "*" LimitOrder
 Asset "1" -- "*" LimitOrder
 LimitOrder "1" -- "1" OrderStatus
 
-' Corrected and added relations
-Asset "1" -- "*" Transaction
-Portfolio "1" -- "*" Transaction
+' Game Holding relations
+GameHolding "*" -- "1" GamePortfolio
+GameHolding "*" -- "1" Asset
+
 @enduml
