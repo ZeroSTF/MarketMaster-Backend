@@ -22,7 +22,7 @@ public class Holding implements Serializable {
     @JoinColumn(name = "portfolio_id")
     private Portfolio portfolio;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "asset_id")
     private Asset asset;
 

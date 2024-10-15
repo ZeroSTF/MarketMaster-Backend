@@ -3,7 +3,7 @@ package tn.zeros.marketmaster.exception;
 import java.util.List;
 
 public class PortfolioValidationException extends RuntimeException {
-    private List<String> errors;
+    private final List<String> errors;
 
     public PortfolioValidationException(String message, List<String> errors) {
         super(message);

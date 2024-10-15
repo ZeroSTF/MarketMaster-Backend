@@ -1,13 +1,14 @@
 package tn.zeros.marketmaster.service;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.HoldingDTO;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
-import tn.zeros.marketmaster.entity.Asset;
-import tn.zeros.marketmaster.entity.Holding;
-import tn.zeros.marketmaster.entity.Portfolio;
-import tn.zeros.marketmaster.entity.User;
+import tn.zeros.marketmaster.entity.*;
+import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.AssetNotFoundException;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
@@ -45,7 +46,7 @@ public class PortfolioService  {
 
         Map.Entry<LocalDateTime, Double> startEntry = totalValue.entrySet().stream()
                 .filter(entry -> !entry.getKey().isAfter(startDate))
-                .max(Map.Entry.comparingByKey())
+                .min(Map.Entry.comparingByKey())
                 .orElse(null);
 
         Map.Entry<LocalDateTime, Double> endEntry = totalValue.entrySet().stream()
@@ -81,7 +82,7 @@ public class PortfolioService  {
                 })
                 .sum();
 
-        totalHoldingValue += portfolio.getCash();
+        //totalHoldingValue += portfolio.getCash();
 
         return totalHoldingValue;
     }
@@ -114,31 +115,46 @@ public class PortfolioService  {
         Portfolio updatedPortfolio = portfolioRepository.save(portfolio);
         return PortfolioDTO.fromEntity(updatedPortfolio);
     }
-
-    public PortfolioDTO newPortfolio(PortfolioDTO portfolioDTO) {
-        User user = userRepository.findById(portfolioDTO.getUserId())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
+    @Transactional
+    public PortfolioDTO newPortfolio(Long userId) {
+        User user= userRepository.findById(userId).orElseThrow(() ->new UsernameNotFoundException("No user found"));
         Portfolio portfolio = new Portfolio();
+        portfolio.setTotalValue(new HashMap<>());
+        portfolio.getTotalValue().put(LocalDateTime.now(), 100000D);
+        portfolio.setCash(100000D);
+        portfolio.setHoldings(new HashSet<>());
         portfolio.setUser(user);
-        portfolio.setCash(portfolioDTO.getCash());
 
-        Set<Holding> holdings = new HashSet<>();
-        for (HoldingDTO holdingDTO : portfolioDTO.getHoldings()) {
-            Holding holding = new Holding();
-            holding.setQuantity(holdingDTO.getQuantity());
-            holding.setPortfolio(portfolio);
-            holding.setAsset(assetRepository.findById(holdingDTO.getAssetId())
-                    .orElseThrow(() -> new AssetNotFoundException("Asset not found")));
-            holdings.add(holding);
-        }
-        portfolio.setHoldings(holdings);
-
-        portfolio.setTotalValue(portfolioDTO.getTotalValue());
+        portfolio.setTransactions(new HashSet<>());
 
         Portfolio savedPortfolio = portfolioRepository.save(portfolio);
         return PortfolioDTO.fromEntity(savedPortfolio);
+
     }
 
+    public double calculeInvestisement(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        double investisement=0D;
+        Portfolio portfolio = user.getPortfolio();
+        Set<Transaction> transactions = portfolio.getTransactions();
+        for (Transaction t:transactions) {
+            if (t.getType().equals(TransactionType.BUY)){
+                investisement+=(t.getPrice()*t.getQuantity());
+            }
 
+        }
+        return investisement;
+    }
+    @Scheduled(cron = "0 0 0 * * *")
+    public void updateTotalValue(){
+        List<User> users = userRepository.findAll();
+        for (User u:users) {
+            Portfolio portfolio=u.getPortfolio();
+            Double value=portfolio.getCash()+calculeInvestisement(u.getId());
+            portfolio.getTotalValue().put(LocalDateTime.now(),value);
+
+
+        }
+    }
 }
