@@ -1,0 +1,369 @@
+@startuml MarketMaster Conception Class Diagram
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+top to bottom direction
+
+package "com.marketSimulator.user" {
+    enum Role {
+        USER
+        ADMIN
+    }
+
+    class User {
+        -id: Long
+        -username: String
+        -email: String
+        -passwordHash: String
+        -registrationDate: LocalDateTime
+        -role: Role
+        +getId(): Long
+        +getUsername(): String
+        +setUsername(username: String): void
+        +getEmail(): String
+        +setEmail(email: String): void
+        +verifyPassword(password: String): boolean
+        +getRole(): Role
+        +setRole(role: Role): void
+    }
+}
+
+package "com.marketSimulator.portfolio" {
+    class Portfolio {
+        -id: Long
+        -userId: Long
+        -virtualCashBalance: BigDecimal
+        +getId(): Long
+        +getVirtualCashBalance(): BigDecimal
+        +setVirtualCashBalance(balance: BigDecimal): void
+    }
+
+    class Holding {
+        -id: Long
+        -portfolioId: Long
+        -assetId: Long
+        -quantity: BigDecimal
+        +getId(): Long
+        +getQuantity(): BigDecimal
+        +setQuantity(quantity: BigDecimal): void
+    }
+}
+
+package "com.marketSimulator.asset" {
+    enum AssetType {
+        STOCK
+        BOND
+        COMMODITY
+        CURRENCY
+    }
+
+    class Asset {
+        -id: Long
+        -symbol: String
+        -name: String
+        -type: AssetType
+        +getId(): Long
+        +getSymbol(): String
+        +getName(): String
+        +getType(): AssetType
+    }
+}
+
+package "com.marketSimulator.trading" {
+    enum TransactionType {
+        BUY
+        SELL
+    }
+
+    class Transaction {
+        -id: Long
+        -portfolioId: Long
+        -assetId: Long
+        -type: TransactionType
+        -quantity: BigDecimal
+        -price: BigDecimal
+        -timestamp: LocalDateTime
+        +getId(): Long
+        +getType(): TransactionType
+        +getQuantity(): BigDecimal
+        +getPrice(): BigDecimal
+        +getTimestamp(): LocalDateTime
+    }
+
+    class LimitOrder {
+        -id: Long
+        -userId: Long
+        -assetId: Long
+        -type: TransactionType
+        -quantity: BigDecimal
+        -limitPrice: BigDecimal
+        -status: OrderStatus
+        -creationTimestamp: LocalDateTime
+        -executionTimestamp: LocalDateTime
+        +getId(): Long
+        +getType(): TransactionType
+        +getQuantity(): BigDecimal
+        +getLimitPrice(): BigDecimal
+        +getStatus(): OrderStatus
+        +setStatus(status: OrderStatus): void
+        +getCreationTimestamp(): LocalDateTime
+        +getExecutionTimestamp(): LocalDateTime
+        +setExecutionTimestamp(timestamp: LocalDateTime): void
+    }
+
+    enum OrderStatus {
+        PENDING
+        EXECUTED
+        CANCELLED
+        EXPIRED
+    }
+}
+
+package "com.marketSimulator.learning" {
+    class Course {
+        -id: Long
+        -title: String
+        -description: String
+        -content: String
+        -difficultyLevel: Integer
+        +getId(): Long
+        +getTitle(): String
+        +getContent(): String
+        +getDifficultyLevel(): Integer
+    }
+
+    class UserProgress {
+        -id: Long
+        -userId: Long
+        -courseId: Long
+        -completionStatus: Boolean
+        -score: Integer
+        -lastAccessDate: LocalDateTime
+        +getId(): Long
+        +getCompletionStatus(): Boolean
+        +setCompletionStatus(status: Boolean): void
+        +getScore(): Integer
+        +setScore(score: Integer): void
+        +updateLastAccessDate(): void
+    }
+}
+
+package "com.marketSimulator.achievement" {
+    enum AchievementType {
+        COURSE_COMPLETION
+        TRADING_VOLUME
+        PROFIT_MILESTONE
+        SESSION_PARTICIPATION
+    }
+
+    enum AchievementTier {
+        BRONZE
+        SILVER
+        GOLD
+        PLATINUM
+    }
+
+    class Achievement {
+        -id: Long
+        -name: String
+        -description: String
+        -type: AchievementType
+        -tier: AchievementTier
+        -requiredCount: Integer
+        +getId(): Long
+        +getName(): String
+        +getType(): AchievementType
+        +getTier(): AchievementTier
+        +getRequiredCount(): Integer
+    }
+
+    class UserAchievement {
+        -id: Long
+        -userId: Long
+        -achievementId: Long
+        -dateEarned: LocalDateTime
+        -currentCount: Integer
+        +getId(): Long
+        +getDateEarned(): LocalDateTime
+        +getCurrentCount(): Integer
+        +incrementCount(): void
+    }
+}
+
+package "com.marketSimulator.game" {
+    class Game {
+        -id: Long
+        -title: String
+        -description: String
+        -creationTimestamp: LocalDateTime
+        -startTimestamp: LocalDateTime
+        -endTimestamp: LocalDateTime
+        -simulationStartDate: LocalDate
+        -simulationEndDate: LocalDate
+        -timeAccelerationFactor: Float
+        -maxPlayTimePer: Duration
+        -creatorUserId: Long
+        -status: GameStatus
+        +getId(): Long
+        +getTitle(): String
+        +getSimulationStartDate(): LocalDate
+        +getSimulationEndDate(): LocalDate
+        +getTimeAccelerationFactor(): Float
+        +getMaxPlayTimePer(): Duration
+        +getStatus(): GameStatus
+        +setStatus(status: GameStatus): void
+    }
+
+    enum GameStatus {
+        UPCOMING
+        ACTIVE
+        COMPLETED
+        CANCELLED
+    }
+
+    class GameParticipation {
+        -id: Long
+        -gameId: Long
+        -userId: Long
+        -joinTimestamp: LocalDateTime
+        -totalPlayTime: Duration
+        -lastResumeTimestamp: LocalDateTime
+        -finalScore: BigDecimal
+        -ranking: Integer
+        +getId(): Long
+        +getJoinTimestamp(): LocalDateTime
+        +getTotalPlayTime(): Duration
+        +updateTotalPlayTime(): void
+        +getLastResumeTimestamp(): LocalDateTime
+        +setLastResumeTimestamp(timestamp: LocalDateTime): void
+        +getFinalScore(): BigDecimal
+        +setFinalScore(score: BigDecimal): void
+        +getRanking(): Integer
+        +setRanking(ranking: Integer): void
+    }
+
+    class GamePortfolio {
+        -id: Long
+        -gameId: Long
+        -userId: Long
+        -virtualCashBalance: BigDecimal
+        +getId(): Long
+        +getVirtualCashBalance(): BigDecimal
+        +setVirtualCashBalance(balance: BigDecimal): void
+    }
+
+    class GameTransaction {
+        -id: Long
+        -gamePortfolioId: Long
+        -assetId: Long
+        -type: TransactionType
+        -quantity: BigDecimal
+        -price: BigDecimal
+        -simulationTimestamp: LocalDateTime
+        -realTimestamp: LocalDateTime
+        +getId(): Long
+        +getType(): TransactionType
+        +getQuantity(): BigDecimal
+        +getPrice(): BigDecimal
+        +getSimulationTimestamp(): LocalDateTime
+        +getRealTimestamp(): LocalDateTime
+    }
+}
+
+package "com.marketSimulator.insurance" {
+    class InsuranceProduct {
+        -id: Long
+        -name: String
+        -description: String
+        -type: String
+        +getId(): Long
+        +getName(): String
+        +getDescription(): String
+        +getType(): String
+    }
+
+    class ActuarialModel {
+        -id: Long
+        -productId: Long
+        -modelParameters: JSON
+        -creationDate: LocalDateTime
+        -lastUpdated: LocalDateTime
+        +getId(): Long
+        +getModelParameters(): JSON
+        +setModelParameters(parameters: JSON): void
+        +getCreationDate(): LocalDateTime
+        +getLastUpdated(): LocalDateTime
+    }
+
+    class UserInsurance {
+        -id: Long
+        -userId: Long
+        -productId: Long
+        -startDate: LocalDateTime
+        -endDate: LocalDateTime
+        -premium: BigDecimal
+        +getId(): Long
+        +getUserId(): Long
+        +getProductId(): Long
+        +getStartDate(): LocalDateTime
+        +getEndDate(): LocalDateTime
+        +getPremium(): BigDecimal
+    }
+}
+
+package "com.marketSimulator.watchlist" {
+    class UserWatchlist {
+        -id: Long
+        -userId: Long
+        -assetId: Long
+        +getId(): Long
+        +getUserId(): Long
+        +getAssetId(): Long
+    }
+}
+
+' User relations
+User "1" -- "*" UserProgress
+User "1" -- "*" UserAchievement
+User "1" -- "*" UserWatchlist
+User "1" -- "*" UserInsurance
+User "1" -- "1" Role
+User "1" -- "1" Portfolio
+
+' Portfolio relations
+Portfolio "1" -- "*" Holding
+Portfolio "1" -- "*" Transaction
+
+' Asset relations
+Asset "1" -- "*" Holding
+Asset "1" -- "*" UserWatchlist
+
+' Course relations
+Course "1" -- "*" UserProgress
+
+' Achievement relations
+Achievement "1" -- "*" UserAchievement
+
+' Game relations
+Game "1" -- "*" GameParticipation
+Game "1" -- "*" GamePortfolio
+GamePortfolio "1" -- "*" GameTransaction
+User "1" -- "*" GameParticipation
+User "1" -- "*" GamePortfolio
+Asset "1" -- "*" GameTransaction
+Game "1" -- "1" GameStatus
+
+' Insurance relations
+InsuranceProduct "1" -- "*" ActuarialModel
+InsuranceProduct "1" -- "*" UserInsurance
+
+
+' LimitOrder relations
+User "1" -- "*" LimitOrder
+Asset "1" -- "*" LimitOrder
+LimitOrder "0..1" -- "0..1" Transaction
+LimitOrder "1" -- "1" OrderStatus
+
+' Corrected and added relations
+Asset "1" -- "*" Transaction
+Portfolio "1" -- "*" Transaction
+@enduml
