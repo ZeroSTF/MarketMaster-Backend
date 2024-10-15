@@ -22,7 +22,7 @@ public class Transaction implements Serializable {
     @JoinColumn(name = "portfolio_id")
     private Portfolio portfolio;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "asset_id")
     private Asset asset;
 
@@ -30,9 +30,9 @@ public class Transaction implements Serializable {
     private TransactionType type;
 
     private Integer quantity;
-    private Double price;
+    private double price;
     private LocalDateTime timestamp;
-
+  
     @PrePersist
     protected void onCreate() {
         timestamp = LocalDateTime.now();

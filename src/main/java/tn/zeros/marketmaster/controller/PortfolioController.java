@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
@@ -19,15 +20,22 @@ import java.time.Duration;
 public class PortfolioController {
     private final PortfolioService portfolioService;
 
-    @PostMapping
-    public ResponseEntity<PortfolioDTO> createPortfolio(@RequestBody PortfolioDTO portfolioDTO) {
+
+    @PostMapping("new/{userId}")
+    public ResponseEntity<PortfolioDTO> createNewPortfolio(@PathVariable Long userId) {
+
         try {
-            PortfolioDTO createdPortfolio = portfolioService.newPortfolio(portfolioDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdPortfolio);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.badRequest().build();
+            PortfolioDTO newPortfolio = portfolioService.newPortfolio(userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newPortfolio);
+        } catch (UsernameNotFoundException e) {
+
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<PortfolioDTO> updatePortfolio(@PathVariable Long id, @RequestBody PortfolioDTO portfolioDTO) {
@@ -41,7 +49,7 @@ public class PortfolioController {
             return ResponseEntity.badRequest().build();
         }
     }
-
+/*
     @GetMapping("/{id}/holding-value")
     public ResponseEntity<Double> getPortfolioHoldingValue(@PathVariable Long id) {
         try {
@@ -63,5 +71,5 @@ public class PortfolioController {
             return ResponseEntity.notFound().build();
         }
     }
-
+*/
 }

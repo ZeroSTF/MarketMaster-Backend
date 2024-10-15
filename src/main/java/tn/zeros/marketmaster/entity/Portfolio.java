@@ -36,4 +36,6 @@ public class Portfolio implements Serializable {
     private Set<Transaction> transactions = new LinkedHashSet<>();
 
     private double cash;
+
+
 }
