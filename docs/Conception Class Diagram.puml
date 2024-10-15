@@ -360,7 +360,6 @@ InsuranceProduct "1" -- "*" UserInsurance
 ' LimitOrder relations
 User "1" -- "*" LimitOrder
 Asset "1" -- "*" LimitOrder
-LimitOrder "0..1" -- "0..1" Transaction
 LimitOrder "1" -- "1" OrderStatus
 
 ' Corrected and added relations
