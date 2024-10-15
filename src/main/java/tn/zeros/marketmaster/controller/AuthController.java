@@ -4,12 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
-import tn.zeros.marketmaster.dto.LoginRequestDTO;
-import tn.zeros.marketmaster.dto.SignupRequestDTO;
-import tn.zeros.marketmaster.dto.TokenResponseDTO;
-import tn.zeros.marketmaster.dto.RefreshTokenRequestDTO;
+import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.CustomAuthenticationException;
 import tn.zeros.marketmaster.exception.TokenValidationException;
@@ -24,17 +22,22 @@ public class AuthController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/signup")
-    public ResponseEntity<User> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
+    public ResponseEntity<SignupResponseDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
         log.info("Attempting signup for user: {}", signupRequest.getEmail());
-        User user = authenticationService.signup(signupRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        SignupResponseDTO signupResponse = authenticationService.signup(signupRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(signupResponse);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
         log.info("Attempting login for user: {}", loginRequest.getUsername());
-        TokenResponseDTO tokenResponse = authenticationService.authenticate(loginRequest);
-        return ResponseEntity.ok(tokenResponse);
+        try {
+            TokenResponseDTO tokenResponse = authenticationService.authenticate(loginRequest);
+            return ResponseEntity.ok(tokenResponse);
+        } catch (BadCredentialsException e) {
+            log.warn("Login failed for user: {}", loginRequest.getUsername());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
     }
 
     @PostMapping("/refresh-token")
