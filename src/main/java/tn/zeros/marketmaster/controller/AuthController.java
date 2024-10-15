@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import tn.zeros.marketmaster.dto.*;
@@ -49,7 +50,7 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
-    //EXCEPTION HANDLERS
+    /////////////////////////////////////////////////////////////////////////////// EXCEPTION HANDLERS /////////////////////////////////////////////////////////////////////////////////////////////////
     @ExceptionHandler(CustomAuthenticationException.class)
     public ResponseEntity<String> handleAuthenticationException(CustomAuthenticationException e) {
         log.error("Authentication error: {}", e.getMessage());
@@ -72,6 +73,12 @@ public class AuthController {
     public ResponseEntity<String> handleBadCredentialsException(BadCredentialsException e) {
         log.warn("Login failed: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<String> handleMissingRequestHeaderException(MissingRequestHeaderException e) {
+        log.warn("Missing required header: {}", e.getHeaderName());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required header: " + e.getHeaderName());
     }
 
     @ExceptionHandler(Exception.class)
