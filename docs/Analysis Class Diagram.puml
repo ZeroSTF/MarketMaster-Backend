@@ -71,7 +71,6 @@ Asset "1" -- "*" Watchlist
 Game "1" -- "*" Portfolio
 Game "1" -- "*" Transaction
 
-' Layout improvements
 User -[hidden]right- Portfolio
 Portfolio -[hidden]right- Asset
 Asset -[hidden]right- Transaction
