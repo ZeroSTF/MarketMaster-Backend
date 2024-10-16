@@ -37,6 +37,7 @@ public class SecurityConfig {
                     return configuration;
                 }))
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/market/**").permitAll()
                         .requestMatchers("/alpha/**").permitAll()
