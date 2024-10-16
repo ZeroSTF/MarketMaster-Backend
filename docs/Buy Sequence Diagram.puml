@@ -1,0 +1,45 @@
+@startuml Buy Asset Sequence Diagram
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 20
+skinparam maxMessageSize 60
+
+participant "Angular\nComponent" as AngularComp
+participant "Angular\nAssetService" as AngularService
+participant "HttpClient" as HttpClient
+participant "AssetController" as Controller
+participant "AssetService" as Service
+participant "AssetRepository" as Repository
+participant "UserRepository" as UserRepo
+
+AngularComp -> AngularService : buyAsset(assetId, quantity)
+activate AngularService
+
+AngularService -> HttpClient : post('/api/assets/buy', {assetId, quantity})
+activate HttpClient
+
+HttpClient -> Controller : buyAsset(BuyAssetRequest)
+activate Controller
+
+Controller -> Service : purchaseAsset(userId, assetId, quantity)
+activate Service
+
+Service -> UserRepo : findById(userId)
+Service -> Repository : findById(assetId)
+
+Service -> UserRepo : save(updatedUser)
+Service -> Repository : save(updatedAsset)
+Service -> Repository : saveTransaction(newTransaction)
+
+Service --> Controller : PurchaseResult
+deactivate Service
+
+Controller --> HttpClient : ResponseEntity<PurchaseResponse>
+deactivate Controller
+
+HttpClient --> AngularService : Observable<PurchaseResponse>
+deactivate HttpClient
+
+AngularService --> AngularComp : PurchaseResponse
+deactivate AngularService
+
+@enduml

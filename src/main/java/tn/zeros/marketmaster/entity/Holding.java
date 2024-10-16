@@ -2,8 +2,10 @@ package tn.zeros.marketmaster.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.proxy.HibernateProxy;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.util.Objects;
 
 @Builder
 @NoArgsConstructor
@@ -11,27 +13,34 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-public class Holding {
+public class Holding implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "portfolio_id", referencedColumnName = "id")
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "portfolio_id")
     private Portfolio portfolio;
 
     @ManyToOne
-    @JoinColumn(name = "stock_id", referencedColumnName = "id")
-    private Stock stock;
+    @JoinColumn(name = "asset_id")
+    private Asset asset;
 
     private Integer quantity;
-    private Double purchasePrice; // Price when shares were bought
-    private Double currentValue;  // Current value of the holding (quantity * current stock price)
 
-    private LocalDateTime purchasedAt;
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        Holding holding = (Holding) o;
+        return getId() != null && Objects.equals(getId(), holding.getId());
+    }
 
-    @PrePersist
-    protected void onCreate() {
-        purchasedAt = LocalDateTime.now();
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 }
