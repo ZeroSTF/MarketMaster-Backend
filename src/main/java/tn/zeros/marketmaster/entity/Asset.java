@@ -21,6 +21,9 @@ public class Asset implements Serializable {
     private String symbol;
 
     @Column(nullable = false)
+    private double price;
+
+    @Column(nullable = false)
     private String name;
 
     @Enumerated(EnumType.STRING)

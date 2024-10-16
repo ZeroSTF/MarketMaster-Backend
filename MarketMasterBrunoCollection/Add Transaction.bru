@@ -6,6 +6,23 @@ meta {
 
 post {
   url: http://localhost:8081/api/tran/ajout/1
-  body: none
-  auth: none
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyaWFkaEBlc3ByaXQudG4iLCJpYXQiOjE3MjkwMDkzODUsImV4cCI6MTcyOTAwOTY4NX0.lhfL0bsf6rrVzn3qNqxgLHfC6uOCXaocSaBywP6u3Dn5fjte0BbuuJObsnncCZpYTaPbc1u4YEVNc1sgdSWd7R2r-XoA4bzX5ybun8Q46_LPEYZ-JMhJsL8vIguQk-s2yIamhTegJ_4meTQUNL4Ztgvs6feDKpGxaseY6y14XqjafO1W9YlkzHmDYjIllfiRzLIKYXQS2ml5Kxv0ywhpjq_eIPw_nBy96TXkBvRAYLrt-Hw1ZigLgagRa6kw7EJRZXLITh_TNXHhztSIoVY7CNytqNNd-fMoFfkZkq_tGzrWu-N0eAKkStAjpL2Er8CJKSHOIZdHSLO6Vp9lYRJwiA
+}
+
+body:json {
+  {
+    "quantity":24,
+    "asset":{"id":1,
+             "name":"appl",
+             "symbol":"Apple",
+             "type":"STOCK"
+            },
+    "price":12,
+    "type":"SELL"
+  }
 }
