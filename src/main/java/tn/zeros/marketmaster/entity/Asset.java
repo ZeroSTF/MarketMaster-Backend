@@ -20,8 +20,6 @@ public class Asset implements Serializable {
     @Column(nullable = false, unique = true)
     private String symbol;
 
-    @Column(nullable = false)
-    private double price;
 
     @Column(nullable = false)
     private String name;

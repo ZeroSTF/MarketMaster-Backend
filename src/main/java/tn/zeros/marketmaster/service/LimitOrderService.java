@@ -54,6 +54,8 @@ public class LimitOrderService {
                 limitOrder.setStatus(OrderStatus.EXECUTED);
                 limitOrderRepository.save(limitOrder);
                 transactionService.ajoutUneTransaction(userId, transactionRequestDTO);
+            } else if (limitOrder.getStatus().equals(OrderStatus.CANCELLED)) {
+                limitOrderRepository.delete(limitOrder);
             }
 
         }
