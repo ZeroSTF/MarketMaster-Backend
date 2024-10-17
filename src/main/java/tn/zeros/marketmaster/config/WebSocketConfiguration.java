@@ -1,5 +1,6 @@
 package tn.zeros.marketmaster.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -18,11 +19,12 @@ import java.rmi.registry.Registry;
 
 public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
-
+    @Value("${frontend.origin}")
+    private String frontendOrigin;
 
    @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/market").setAllowedOrigins("http://localhost:4200/").withSockJS().setClientLibraryUrl("/sockjs");;
+        registry.addEndpoint("/market").setAllowedOrigins(this.frontendOrigin).withSockJS().setClientLibraryUrl("/sockjs");;
     }
     @Override
     public void configureMessageBroker (MessageBrokerRegistry registry) {

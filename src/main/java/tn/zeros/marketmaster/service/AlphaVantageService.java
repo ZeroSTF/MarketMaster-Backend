@@ -1,6 +1,7 @@
 package tn.zeros.marketmaster.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -8,7 +9,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class AlphaVantageService {
 
-    private static final String API_KEY = "X63Y5H1V3K80OUS9";
+    @Value("${alpha.key}")
+    private String API_KEY;
     private static final String BASE_URL = "https://www.alphavantage.co/query";
 
     @Autowired
