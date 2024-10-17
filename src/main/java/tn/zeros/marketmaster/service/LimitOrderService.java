@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.LimitOrderDTO;
-import tn.zeros.marketmaster.dto.TransactionRequestDTO;
+import tn.zeros.marketmaster.dto.TransactionDTO;
+
 import tn.zeros.marketmaster.entity.Asset;
 import tn.zeros.marketmaster.entity.LimitOrder;
 import tn.zeros.marketmaster.entity.Portfolio;
@@ -23,11 +24,13 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class LimitOrderService {
+
     private final AssetRepository assetRepository;
     private final UserRepository userRepository;
     private final LimitOrderRepository limitOrderRepository;
     private final TransactionService transactionService;
     private final AssetService assetService;
+
     public LimitOrderDTO AddLimitOrder(Long userId , LimitOrderDTO limitOrderDTO) {
 
         LimitOrder limitOrder =limitOrderDTO.toEntity();
@@ -39,21 +42,22 @@ public class LimitOrderService {
         limitOrderRepository.save(limitOrder);
         return limitOrderDTO;
     }
-  @Scheduled(fixedRate = 2000)
-  @Transactional
+
+    @Scheduled(fixedRate = 2000)
+    @Transactional
     public void syncLimitOrder(){
         List<LimitOrder> limitOrders = limitOrderRepository.findAll();
         for(LimitOrder limitOrder : limitOrders){
             if (limitOrder.getLimitPrice()>=assetService.getCurrentPrice(limitOrder.getAsset().getId())&&limitOrder.getStatus().equals(OrderStatus.PENDING)){
-                TransactionRequestDTO transactionRequestDTO = new TransactionRequestDTO();
-                transactionRequestDTO.setSymbol(limitOrder.getAsset().getSymbol());
-                transactionRequestDTO.setQuantity(limitOrder.getQuantity());
-                transactionRequestDTO.setType(limitOrder.getType());
+                TransactionDTO transactionDTO = new TransactionDTO();
+                transactionDTO.setSymbol(limitOrder.getAsset().getSymbol());
+                transactionDTO.setQuantity(limitOrder.getQuantity());
+                transactionDTO.setType(limitOrder.getType());
                 Long userId = limitOrder.getUser().getId();
                 limitOrder.setExecutionTimestamp(LocalDateTime.now());
                 limitOrder.setStatus(OrderStatus.EXECUTED);
                 limitOrderRepository.save(limitOrder);
-                transactionService.ajoutUneTransaction(userId, transactionRequestDTO);
+                transactionService.ajoutUneTransaction(userId, transactionDTO);
             } else if (limitOrder.getStatus().equals(OrderStatus.CANCELLED)) {
                 limitOrderRepository.delete(limitOrder);
             }
