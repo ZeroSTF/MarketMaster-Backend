@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Builder
@@ -27,6 +28,9 @@ public class Holding implements Serializable {
     private Asset asset;
 
     private Integer quantity;
+
+    @Column(precision = 19, scale = 4, nullable = false)
+    private BigDecimal averageCostBasis;
 
     @Override
     public final boolean equals(Object o) {

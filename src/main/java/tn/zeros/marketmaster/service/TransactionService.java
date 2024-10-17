@@ -24,6 +24,7 @@ public class TransactionService {
     private final PortfolioRepository portfolioRepository;
     private  final HoldingRepository holdingRepository;
     private final AssetRepository assetRepository;
+
     public List<TransactionDTO> GetStatBySymbol(Long userId, String symbol){
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
