@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.TransactionDTO;
-import tn.zeros.marketmaster.dto.TransactionRequestDTO;
+
 import tn.zeros.marketmaster.entity.Transaction;
 import tn.zeros.marketmaster.service.TransactionService;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class TransactionController {
     private final TransactionService transactionService;
     @PostMapping("/ajout/{id}")
-    public TransactionRequestDTO ajout(@PathVariable("id") Long id, @RequestBody TransactionRequestDTO t){
+    public TransactionDTO ajout(@PathVariable("id") Long id, @RequestBody TransactionDTO t){
         return transactionService.ajoutUneTransaction(id,t);
     }
     @PostMapping("/stat/{id}/{s}")
