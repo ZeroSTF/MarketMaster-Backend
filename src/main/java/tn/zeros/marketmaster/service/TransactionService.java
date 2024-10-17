@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.HoldingDTO;
 import tn.zeros.marketmaster.dto.TransactionDTO;
-import tn.zeros.marketmaster.dto.TransactionRequestDTO;
 import tn.zeros.marketmaster.entity.*;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.*;
@@ -24,6 +23,8 @@ public class TransactionService {
     private final PortfolioRepository portfolioRepository;
     private  final HoldingRepository holdingRepository;
     private final AssetRepository assetRepository;
+    private final AssetService assetService;
+
     public List<TransactionDTO> GetStatBySymbol(Long userId, String symbol){
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -31,21 +32,16 @@ public class TransactionService {
         Set<Transaction> transactions= portfolio.getTransactions();
         List<TransactionDTO> transactionDTOS=new ArrayList<>();
         for (Transaction T:transactions) {
-            System.out.println( symbol);
             if (T.getAsset().getSymbol().trim().equalsIgnoreCase(symbol.trim())){
-                TransactionDTO transactionDTO= new TransactionDTO();
-                transactionDTO.setSymbol(symbol);
-                transactionDTO.setQuantity(T.getQuantity());
-                transactionDTO.setType(T.getType());
-                transactionDTO.setPrice(T.getPrice());
-                transactionDTO.setTimeStamp(T.getTimestamp());
+                TransactionDTO transactionDTO= TransactionDTO.fromEntity(T);
                 transactionDTOS.add(transactionDTO);
             }
         }
         return transactionDTOS;
     }
 
-    public TransactionRequestDTO ajoutUneTransaction(Long userId, TransactionRequestDTO transactionRequestDTO) {
+   @Transactional
+    public TransactionDTO ajoutUneTransaction(Long userId, TransactionDTO transactionDTO) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -54,63 +50,70 @@ public class TransactionService {
             throw new PortfolioNotFoundException("Portfolio not found for user: " + userId);
         }
 
-        if (transactionRequestDTO.getType() == null) {
+        if (transactionDTO.getType() == null) {
             throw new IllegalArgumentException("Transaction type cannot be null");
         }
 
-        switch (transactionRequestDTO.getType()) {
+        switch (transactionDTO.getType()) {
             case BUY:
-                processBuyTransaction(portfolio, transactionRequestDTO);
+                processBuyTransaction(portfolio, transactionDTO);
                 break;
             case SELL:
-                processSellTransaction(portfolio, transactionRequestDTO);
+                processSellTransaction(portfolio, transactionDTO);
                 break;
             default:
                 throw new TransactionIncorrectException("Invalid transaction type");
         }
 
         portfolioRepository.save(portfolio);
-        return transactionRequestDTO;
+        return transactionDTO;
     }
 
-    private void processBuyTransaction(Portfolio portfolio, TransactionRequestDTO transactionRequestDTO) {
-        double totalCost = transactionRequestDTO.getQuantity() * transactionRequestDTO.getPrice();
+    private void processBuyTransaction(Portfolio portfolio, TransactionDTO transactionDTO) {
+        Asset asset1 = assetRepository.findBySymbol(transactionDTO.getSymbol());
+        double totalCost = transactionDTO.getQuantity() * assetService.getCurrentPrice(asset1.getId());
         if (portfolio.getCash() < totalCost) {
             throw new InsufficientFundsException("Not enough cash for this transaction");
         }
 
         portfolio.setCash(portfolio.getCash() - totalCost);
-        Asset asset = assetRepository.findBySymbol(transactionRequestDTO.getSymbol());
+        Asset asset = assetRepository.findBySymbol(transactionDTO.getSymbol());
         Holding holding = findOrCreateHolding(portfolio, asset);
-        holding.setQuantity(holding.getQuantity() + transactionRequestDTO.getQuantity());
+        holding.setQuantity(holding.getQuantity() + transactionDTO.getQuantity());
 
-        Transaction transaction = transactionRequestDTO.toEntity();
+        Transaction transaction = transactionDTO.toEntity();
+        transaction.setPrice(assetService.getCurrentPrice(asset1.getId()));
         transaction.setPortfolio(portfolio);
+        transaction.setAsset(asset);
         portfolio.getTransactions().add(transaction);
     }
 
-    private void processSellTransaction(Portfolio portfolio, TransactionRequestDTO transactionRequestDTO) {
-        Asset asset = assetRepository.findBySymbol(transactionRequestDTO.getSymbol());
+    private void processSellTransaction(Portfolio portfolio, TransactionDTO transactionDTO) {
+        Asset asset = assetRepository.findBySymbol(transactionDTO.getSymbol());
         Holding holding = portfolio.getHoldings().stream()
                 .filter(h -> h.getAsset().equals(asset))
                 .findFirst()
                 .orElseThrow(() -> new InsufficientHoldingsException("No holdings found for this asset"));
 
-        if (holding.getQuantity() < transactionRequestDTO.getQuantity()) {
+        if (holding.getQuantity() < transactionDTO.getQuantity()) {
             throw new InsufficientHoldingsException("Not enough holdings for this transaction");
         }
 
-        holding.setQuantity(holding.getQuantity() - transactionRequestDTO.getQuantity());
+        holding.setQuantity(holding.getQuantity() - transactionDTO.getQuantity());
         if (holding.getQuantity() == 0) {
             portfolio.getHoldings().remove(holding);
         }
-
-        double totalProceeds = transactionRequestDTO.getQuantity() * transactionRequestDTO.getPrice();
+        holdingRepository.save(holding); 
+        Asset asset2 = assetRepository.findBySymbol(transactionDTO.getSymbol());
+        double totalProceeds = transactionDTO.getQuantity() * assetService.getCurrentPrice(asset2.getId());
         portfolio.setCash(portfolio.getCash() + totalProceeds);
 
-        Transaction transaction = transactionRequestDTO.toEntity();
+        Transaction transaction = transactionDTO.toEntity();
+        transaction.setPrice(assetService.getCurrentPrice(asset2.getId()));
         transaction.setPortfolio(portfolio);
+        transaction.setAsset(asset2);
         portfolio.getTransactions().add(transaction);
+
     }
 
     private Holding findOrCreateHolding(Portfolio portfolio, Asset asset) {

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Entity
 @Getter
@@ -25,5 +26,8 @@ public class GameHolding implements Serializable {
     private Asset asset;
 
     private Integer quantity;
+
+    @Column(precision = 19, scale = 4, nullable = false)
+    private BigDecimal averageCostBasis;
 
 }

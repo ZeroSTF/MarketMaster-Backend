@@ -1,0 +1,24 @@
+meta {
+  name: Add LimitOrder
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8081/api/order/add/1
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyaWFkaEBlc3ByaXQudG4iLCJpYXQiOjE3MjkxNzgyNTksImV4cCI6MTcyOTE3ODU1OX0.N4eG_uwt0Q8nkUTQEfjAwDUkK4yv6FaKPausvTTqzKqpmp3CWh4rGIF4uxk4UP3FOI5NwLFMOgkiwlSvhfP-D9diHUiA6DUETwdZ5n8mdnWFHox3uKovj34A1bYnGAMptump5h2dQbVskI3WQU9Vlli0m3Q2nDT4_D0cQGkL6oEpm283boYStupjAiaMWpOPYDHRN2BHZ2znDAozYgkrxQ8NZ-3HDRjBzGgxOTy0j3OhvV71PH-Q5aXrXJPXwu0QIyWEkiQJ6RRLZnJd5oHi-jANBV9QoXKVZS1KnDKjHnfIoiD48zt3Yr_5gEvFICiuPb2O2Rgppy2Uczlp6Z1LFA
+}
+
+body:json {
+  {
+    "symbol":"Apple",
+    "limitPrice":234,
+    "quantity":10,
+    "type":"SELL"
+  }
+}

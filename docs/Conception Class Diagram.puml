@@ -42,9 +42,12 @@ package "com.marketSimulator.portfolio" {
         -portfolioId: Long
         -assetId: Long
         -quantity: BigDecimal
+        -averageCostBasis: BigDecimal
         +getId(): Long
         +getQuantity(): BigDecimal
         +setQuantity(quantity: BigDecimal): void
+        +getAverageCostBasis(): BigDecimal
+        +setAverageCostBasis(averageCostBasis: BigDecimal): void
     }
 }
 
@@ -258,9 +261,12 @@ package "com.marketSimulator.game" {
             -gamePortfolioId: Long
             -assetId: Long
             -quantity: BigDecimal
+            -averageCostBasis: BigDecimal
             +getId(): Long
             +getQuantity(): BigDecimal
             +setQuantity(quantity: BigDecimal): void
+            +getAverageCostBasis(): BigDecimal
+            +setAverageCostBasis(averageCostBasis: BigDecimal): void
         }
 
     class GameTransaction {

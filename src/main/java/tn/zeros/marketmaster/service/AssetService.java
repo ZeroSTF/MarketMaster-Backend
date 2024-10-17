@@ -10,6 +10,6 @@ public class AssetService {
     private final AssetRepository assetRepository;
 
     public double getCurrentPrice(Long assetId) {
-        return 0.0; //TODO BY GADDOUR WITH API
+        return 234; //TODO BY GADDOUR WITH API
     }
 }

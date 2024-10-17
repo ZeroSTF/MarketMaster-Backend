@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import tn.zeros.marketmaster.entity.Portfolio;
+import tn.zeros.marketmaster.entity.Transaction;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
 
 import java.time.LocalDateTime;
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionDTO {
+    Long id;
     String symbol;
     int quantity;
     double price;
@@ -28,4 +31,25 @@ public class TransactionDTO {
                 ", timeStamp=" + timeStamp +
                 '}';
     }
+    public Transaction toEntity() {
+        Transaction transaction = new Transaction();
+        transaction.setId(id);
+        transaction.setType(this.type);
+        transaction.setQuantity(this.quantity);
+        transaction.setPrice(this.price);
+        transaction.setTimestamp(this.timeStamp);
+        return transaction;
+    }
+
+    public static TransactionDTO fromEntity(Transaction transaction) {
+        return TransactionDTO.builder()
+                .id(transaction.getId())
+                .type(transaction.getType())
+                .price(transaction.getPrice())
+                .quantity(transaction.getQuantity())
+                .symbol(transaction.getAsset().getSymbol())
+                .timeStamp(transaction.getTimestamp())
+                .build();
+    }
+
 }
