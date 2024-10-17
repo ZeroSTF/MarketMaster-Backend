@@ -17,13 +17,11 @@ public class TransactionRequestDTO {
     int quantity;
     String symbol;
 
-    double price;
+    //double price;
     TransactionType type;
     public static TransactionRequestDTO fromEntity(Transaction transaction) {
         return TransactionRequestDTO.builder()
                 .quantity(transaction.getQuantity()  )
-
-                .price(transaction.getPrice())
                 .type(transaction.getType())
                 .build();
     }
@@ -31,7 +29,7 @@ public class TransactionRequestDTO {
     public Transaction toEntity() {
         Transaction transaction = new Transaction();
 
-        transaction.setPrice(this.price);
+
         transaction.setType(this.type);
         transaction.setQuantity(this.quantity);
 

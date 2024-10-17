@@ -22,7 +22,7 @@ public class Portfolio implements Serializable {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private Set<Holding> holdings = new LinkedHashSet<>();
 
     @ElementCollection

@@ -27,9 +27,11 @@ public class LimitOrder implements Serializable {
     @JoinColumn(name = "asset_id")
     private Asset asset;
 
+    @Enumerated(EnumType.STRING)
     private TransactionType type;
     private Integer quantity;
     private Double limitPrice;
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
     private LocalDateTime creationTimestamp;
     private LocalDateTime executionTimestamp;
