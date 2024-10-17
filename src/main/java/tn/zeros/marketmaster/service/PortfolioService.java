@@ -26,7 +26,6 @@ public class PortfolioService  {
     private final PortfolioRepository portfolioRepository;
     private final UserRepository userRepository;
     private final AssetRepository assetRepository;
-
     private final AssetService assetService;
 
     public double calculateGainLoss(Long userId, Duration duration) {
@@ -62,6 +61,8 @@ public class PortfolioService  {
 
         return endValue - startValue;
     }
+
+
 
     public double calculatePortfolioHolding(Long userId) {
         User user = userRepository.findById(userId)
@@ -115,6 +116,7 @@ public class PortfolioService  {
         Portfolio updatedPortfolio = portfolioRepository.save(portfolio);
         return PortfolioDTO.fromEntity(updatedPortfolio);
     }
+
     @Transactional
     public PortfolioDTO newPortfolio(Long userId) {
         User user= userRepository.findById(userId).orElseThrow(() ->new UsernameNotFoundException("No user found"));
@@ -146,6 +148,7 @@ public class PortfolioService  {
         }
         return investisement;
     }
+
     @Scheduled(cron = "0 0 0 * * *")
     public void updateTotalValue(){
         List<User> users = userRepository.findAll();
