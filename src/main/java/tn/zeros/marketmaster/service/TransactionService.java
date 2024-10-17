@@ -3,6 +3,7 @@ package tn.zeros.marketmaster.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.HoldingDTO;
 import tn.zeros.marketmaster.dto.TransactionDTO;
@@ -11,10 +12,11 @@ import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.*;
 import tn.zeros.marketmaster.repository.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-
+@Slf4j
 @Service
 @AllArgsConstructor
 public class TransactionService {
@@ -24,6 +26,7 @@ public class TransactionService {
     private  final HoldingRepository holdingRepository;
     private final AssetRepository assetRepository;
     private final AssetService assetService;
+    private final HoldingService holdingService;
 
     public List<TransactionDTO> GetStatBySymbol(Long userId, String symbol){
         User user = userRepository.findById(userId)
@@ -79,13 +82,12 @@ public class TransactionService {
         portfolio.setCash(portfolio.getCash() - totalCost);
         Asset asset = assetRepository.findBySymbol(transactionDTO.getSymbol());
         Holding holding = findOrCreateHolding(portfolio, asset);
-        holding.setQuantity(holding.getQuantity() + transactionDTO.getQuantity());
-
         Transaction transaction = transactionDTO.toEntity();
         transaction.setPrice(assetService.getCurrentPrice(asset1.getId()));
         transaction.setPortfolio(portfolio);
         transaction.setAsset(asset);
         portfolio.getTransactions().add(transaction);
+        holdingService.updateAverageCostBasis(holding.getId(),BigDecimal.valueOf(transaction.getPrice()),transactionDTO.getQuantity());
     }
 
     private void processSellTransaction(Portfolio portfolio, TransactionDTO transactionDTO) {
@@ -125,6 +127,8 @@ public class TransactionService {
                     newHolding.setAsset(asset);
                     newHolding.setQuantity(0);
                     newHolding.setPortfolio(portfolio);
+                    newHolding.setAverageCostBasis(BigDecimal.ZERO);
+                    holdingRepository.save(newHolding);
                     portfolio.getHoldings().add(newHolding);
                     return newHolding;
                 });
