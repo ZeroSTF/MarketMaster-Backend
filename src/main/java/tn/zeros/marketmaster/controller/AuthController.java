@@ -23,14 +23,14 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<UserDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
-        log.info("Attempting signup for user: {}", signupRequest.getEmail());
+        log.info("Attempting signup for user: {}", signupRequest);
         UserDTO signupResponse = authenticationService.signup(signupRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(signupResponse);
     }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
-        log.info("Attempting login for user: {}", loginRequest.getUsername());
+        log.info("Attempting login for user: {}", loginRequest);
         TokenResponseDTO tokenResponse = authenticationService.authenticate(loginRequest);
         return ResponseEntity.ok(tokenResponse);
     }
