@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  app:
+    image: marketmaster-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      MYSQL_URL: db
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: password
+      JWT_ACCESS_TOKEN_EXPIRATION: 300000
+      JWT_REFRESH_TOKEN_EXPIRATION: 604800000
+      FRONTEND_ORIGIN: "http://localhost:4200"
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: MarketMasterDB
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
+    driver: bridge

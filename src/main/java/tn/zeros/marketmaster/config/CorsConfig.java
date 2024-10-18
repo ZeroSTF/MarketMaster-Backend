@@ -1,5 +1,6 @@
 package tn.zeros.marketmaster.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -10,11 +11,13 @@ import java.util.Arrays;
 
 @Configuration
 public class CorsConfig {
+    @Value("${frontend.origin}")
+    private String frontendOrigin;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Adjust as needed
+        configuration.setAllowedOrigins(Arrays.asList(frontendOrigin)); // Adjust as needed
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

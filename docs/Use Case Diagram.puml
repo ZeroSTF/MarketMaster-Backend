@@ -1,0 +1,62 @@
+@startuml MarketMaster Use Case Diagram
+left to right direction
+skinparam actorStyle awesome
+skinparam usecaseStyle rectangle
+
+actor "User" as user
+actor "Admin" as admin
+
+rectangle MarketMaster {
+  usecase "Register Account" as UC1
+  usecase "Login" as UC2
+  usecase "Manage Portfolio" as UC3
+  usecase "Buy Assets" as UC4
+  usecase "Sell Assets" as UC5
+  usecase "View Market Data" as UC6
+  usecase "Create Watchlist" as UC7
+  usecase "Participate in Game" as UC8
+  usecase "Take Courses" as UC9
+  usecase "Earn Achievements" as UC10
+  usecase "Place Limit Orders" as UC11
+  usecase "Purchase Insurance" as UC12
+  usecase "View Transaction History" as UC13
+
+  usecase "Manage Users" as UC14
+  usecase "Configure Game Settings" as UC15
+  usecase "Manage Courses" as UC16
+  usecase "Manage Achievements" as UC17
+  usecase "Manage Insurance Products" as UC18
+}
+
+user ---> UC1
+user ---> UC2
+user ---> UC3
+user ---> UC4
+user ---> UC5
+user ---> UC6
+user ---> UC7
+user ---> UC8
+user ---> UC9
+user ---> UC10
+user ---> UC11
+user ---> UC12
+user ---> UC13
+
+admin ---> UC14
+admin ---> UC15
+admin ---> UC16
+admin ---> UC17
+admin ---> UC18
+
+' Inheritance relationship
+admin --|> user
+
+' Relationships between use cases
+UC3 -down-> UC4 : <<include>>
+UC3 -down-> UC5 : <<include>>
+UC3 -down-> UC13 : <<include>>
+
+UC8 -up-> UC4 : <<extend>>
+UC8 -up-> UC5 : <<extend>>
+
+@enduml

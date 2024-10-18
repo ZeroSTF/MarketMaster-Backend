@@ -2,8 +2,9 @@ package tn.zeros.marketmaster.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import tn.zeros.marketmaster.entity.enums.TradeType;
+import tn.zeros.marketmaster.entity.enums.TransactionType;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Builder
@@ -12,28 +13,26 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-public class Trade {
+public class Transaction implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "portfolio_id")
+    private Portfolio portfolio;
 
     @ManyToOne
-    @JoinColumn(name = "stock_id", referencedColumnName = "id")
-    private Stock stock;
+    @JoinColumn(name = "asset_id")
+    private Asset asset;
 
     @Enumerated(EnumType.STRING)
-    private TradeType type; // BUY or SELL
+    private TransactionType type;
 
     private Integer quantity;
-    private Double price; // Price at which the trade happened
-    private Double totalValue; // totalValue = price * quantity
-
+    private double price;
     private LocalDateTime timestamp;
-
+  
     @PrePersist
     protected void onCreate() {
         timestamp = LocalDateTime.now();

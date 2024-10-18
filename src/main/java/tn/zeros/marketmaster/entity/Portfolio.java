@@ -3,8 +3,9 @@ package tn.zeros.marketmaster.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @Builder
 @NoArgsConstructor
@@ -12,32 +13,29 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-public class Portfolio {
+public class Portfolio implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Holding> holdings;
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private Set<Holding> holdings = new LinkedHashSet<>();
 
-    private Double totalValue;
+    @ElementCollection
+    @CollectionTable(name = "portfolio_total_value", joinColumns = @JoinColumn(name = "portfolio_id"))
+    @MapKeyColumn(name = "date")
+    @Column(name = "value")
+    @OrderBy("date ASC")
+    private Map<LocalDateTime, Double> totalValue= new HashMap<>();
 
-    private String currency; // Optional for tracking portfolio currency (e.g., USD, EUR)
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Transaction> transactions = new LinkedHashSet<>();
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private double cash;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
