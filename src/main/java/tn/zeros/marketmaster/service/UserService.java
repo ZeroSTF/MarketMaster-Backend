@@ -18,8 +18,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public User signup(SignupRequestDTO signupRequest) {
-        if (userRepository.findByEmail(signupRequest.getEmail()).isPresent()) {
-            throw new UserAlreadyExistsException("User with this email already exists");
+        if (userRepository.findByEmail(signupRequest.getEmail()).isPresent() || userRepository.findByUsername(signupRequest.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException("User with this email or username already exists");
         }
 
         User user = User.builder()
