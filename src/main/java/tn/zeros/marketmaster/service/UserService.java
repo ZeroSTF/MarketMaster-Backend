@@ -18,7 +18,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public User signup(SignupRequestDTO signupRequest) {
-        if (userRepository.findByEmail(signupRequest.getEmail()).isPresent() || userRepository.findByUsername(signupRequest.getUsername()).isPresent()) {
+        if (userRepository.findByEmailOrUsername(signupRequest.getEmail(), signupRequest.getUsername()).isPresent()) {
             throw new UserAlreadyExistsException("User with this email or username already exists");
         }
 
