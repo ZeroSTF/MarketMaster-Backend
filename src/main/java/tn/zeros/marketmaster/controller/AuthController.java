@@ -23,14 +23,14 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<UserDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
-        log.info("Attempting signup for user: {}", signupRequest.getEmail());
+        log.info("Attempting signup for user: {}", signupRequest);
         UserDTO signupResponse = authenticationService.signup(signupRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(signupResponse);
     }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
-        log.info("Attempting login for user: {}", loginRequest.getUsername());
+        log.info("Attempting login for user: {}", loginRequest);
         TokenResponseDTO tokenResponse = authenticationService.authenticate(loginRequest);
         return ResponseEntity.ok(tokenResponse);
     }
@@ -47,42 +47,5 @@ public class AuthController {
         String username = authenticationService.getUsernameFromToken(token);
         authenticationService.logout(username);
         return ResponseEntity.ok().build();
-    }
-
-    /////////////////////////////////////////////////////////////////////////////// EXCEPTION HANDLERS /////////////////////////////////////////////////////////////////////////////////////////////////
-    @ExceptionHandler(CustomAuthenticationException.class)
-    public ResponseEntity<String> handleAuthenticationException(CustomAuthenticationException e) {
-        log.error("Authentication error: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
-
-    @ExceptionHandler(TokenValidationException.class)
-    public ResponseEntity<String> handleTokenValidationException(TokenValidationException e) {
-        log.error("Token validation error: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
-
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<String> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
-        log.error("User registration error: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-    }
-
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<String> handleBadCredentialsException(BadCredentialsException e) {
-        log.warn("Login failed: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
-    }
-
-    @ExceptionHandler(MissingRequestHeaderException.class)
-    public ResponseEntity<String> handleMissingRequestHeaderException(MissingRequestHeaderException e) {
-        log.warn("Missing required header: {}", e.getHeaderName());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required header: " + e.getHeaderName());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGenericException(Exception e) {
-        log.error("Unexpected error: ", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
     }
 }

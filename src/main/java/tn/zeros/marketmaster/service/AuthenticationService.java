@@ -24,6 +24,7 @@ public class AuthenticationService {
     private final JwtTokenService jwtTokenService;
     private final TokenStorageService tokenStorageService;
     private final UserService userService;
+    private final PortfolioService portfolioService;
     private final UserDetailsService userDetailsService;
 
     public TokenResponseDTO authenticate(LoginRequestDTO loginRequest) {
@@ -63,6 +64,7 @@ public class AuthenticationService {
 
     public UserDTO signup(SignupRequestDTO signupRequest) {
         User user = userService.signup(signupRequest);
+        portfolioService.newPortfolio(user.getId());
         return UserDTO.fromEntity(user);
     }
 

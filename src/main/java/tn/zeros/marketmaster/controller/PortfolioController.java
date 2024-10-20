@@ -7,11 +7,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import tn.zeros.marketmaster.dto.HoldingDTO;
+import tn.zeros.marketmaster.dto.OverviewDTO;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
+import tn.zeros.marketmaster.entity.Holding;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
+import tn.zeros.marketmaster.service.HoldingService;
 import tn.zeros.marketmaster.service.PortfolioService;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,7 +26,7 @@ import java.time.Duration;
 @Slf4j
 public class PortfolioController {
     private final PortfolioService portfolioService;
-
+    private final HoldingService holdingService;
 
     @PostMapping("new/{userId}")
     public ResponseEntity<PortfolioDTO> createNewPortfolio(@PathVariable Long userId) {
@@ -37,7 +44,7 @@ public class PortfolioController {
     }
 
 
-    @PutMapping("/{id}")
+    /*@PutMapping("/{id}")
     public ResponseEntity<PortfolioDTO> updatePortfolio(@PathVariable Long id, @RequestBody PortfolioDTO portfolioDTO) {
         try {
             portfolioDTO.setId(id);
@@ -48,28 +55,47 @@ public class PortfolioController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.badRequest().build();
         }
-    }
-/*
-    @GetMapping("/{id}/holding-value")
-    public ResponseEntity<Double> getPortfolioHoldingValue(@PathVariable Long id) {
+    }*/
+
+    @PostMapping("/overview/{id}")
+    public ResponseEntity<OverviewDTO> getOverviewData(@PathVariable("id") Long id) {
         try {
-            double value = portfolioService.calculatePortfolioHolding(id);
-            return ResponseEntity.ok(value);
+            OverviewDTO overviewData = portfolioService.prepareOverview(id);
+            return ResponseEntity.ok(overviewData);
         } catch (PortfolioNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/{id}/gain-loss")
-    public ResponseEntity<Double> getPortfolioGainLoss(
-            @PathVariable Long id,
-            @RequestParam Duration duration) {
+    @PostMapping("/totalVal/{id}")
+    public ResponseEntity<List<Map<LocalDateTime, Double>>> totalVal(@PathVariable("id") Long id) {
         try {
-            double gainLoss = portfolioService.calculateGainLoss(id, duration);
-            return ResponseEntity.ok(gainLoss);
+            List<Map<LocalDateTime, Double>> totalValues = portfolioService.getTotalValueByPortfolioId(id);
+            return ResponseEntity.ok(totalValues);
         } catch (PortfolioNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-*/
+
+    @PostMapping("/holding/{id}")
+    public ResponseEntity<List<HoldingDTO>> getHoldingData(@PathVariable("id") Long id) {
+        try {
+            List<HoldingDTO> holdingData = holdingService.getAll(id);
+            return ResponseEntity.ok(holdingData);
+        } catch (PortfolioNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
