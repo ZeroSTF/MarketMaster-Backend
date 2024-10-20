@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 @Setter
-public class AssetDailyDto {
+public class AssetDiscoverDTO {
     private String symbol;
     private double open;
     private double high;

@@ -9,9 +9,6 @@ import org.springframework.web.socket.config.annotation.*;
 
 @Configuration
 @EnableWebSocketMessageBroker
-@EnableWebSocket
-
-
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Value("${frontend.origin}")
@@ -19,7 +16,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
    @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/market").setAllowedOrigins(this.frontendOrigin).withSockJS().setClientLibraryUrl("/sockjs");;
+        registry.addEndpoint("/market").setAllowedOrigins(this.frontendOrigin).withSockJS().setClientLibraryUrl("/sockjs");
     }
     @Override
     public void configureMessageBroker (MessageBrokerRegistry registry) {
