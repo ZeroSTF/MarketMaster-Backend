@@ -2,7 +2,6 @@ package tn.zeros.marketmaster.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
@@ -20,7 +19,7 @@ public class AssetDataService {
     private final CacheManager cacheManager;
 
     @Cacheable(value = "assetData", key = "#symbol", unless = "#result == null")
-    public String getStockData(String symbol) {
+    public String getAssetData(String symbol) {
         try {
             UriComponentsBuilder uriBuilder = UriComponentsBuilder
                     .fromHttpUrl(YFINANCE_URL + symbol)
