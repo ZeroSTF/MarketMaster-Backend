@@ -22,11 +22,9 @@ public class Game implements Serializable {
     private String title;
     private String description;
     private LocalDateTime creationTimestamp;
-    private LocalDateTime startTimestamp;
-    private LocalDateTime endTimestamp;
+
     private LocalDate simulationStartDate;
     private LocalDate simulationEndDate;
-    private float timeAccelerationFactor;
 
     @Column(columnDefinition = "BIGINT") // Being stored as nanoseconds at the moment
     private Duration maxPlayTime;
