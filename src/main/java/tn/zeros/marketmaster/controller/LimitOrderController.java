@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.LimitOrderDTO;
-import tn.zeros.marketmaster.entity.LimitOrder;
 import tn.zeros.marketmaster.service.LimitOrderService;
 
 @RestController
