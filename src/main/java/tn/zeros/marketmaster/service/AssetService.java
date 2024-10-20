@@ -59,14 +59,14 @@ public class AssetService {
     public List<AssetDiscoverDTO> fetchDailyData() {
         return getAllSymbols().parallelStream()
                 .map(symbol -> {
-                    String response = assetDataService.getStockData(symbol);
+                    String response = assetDataService.getAssetData(symbol);
                     return parseResponse(response, symbol);
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
-    @Scheduled(fixedRateString = "${asset.update.interval:20000}")
+    @Scheduled(fixedRateString = "${asset.update.interval}")
     public void sendStockUpdates() {
         List<AssetDiscoverDTO> dailyDto = this.fetchDailyData();
         messagingTemplate.convertAndSend("/topic/market", dailyDto);

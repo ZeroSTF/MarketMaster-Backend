@@ -3,7 +3,7 @@ package tn.zeros.marketmaster.dto;
 import lombok.Data;
 
 @Data
-public class AssetStatisticsDto {
+public class AssetDetailsDTO {
     private String symbol;
     private double enterpriseValue;
     private double forwardPE;
