@@ -10,12 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.HoldingDTO;
 import tn.zeros.marketmaster.dto.OverviewDTO;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
-import tn.zeros.marketmaster.entity.Holding;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.service.HoldingService;
 import tn.zeros.marketmaster.service.PortfolioService;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;

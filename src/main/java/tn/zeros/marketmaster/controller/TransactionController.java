@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.TransactionDTO;
 
-import tn.zeros.marketmaster.entity.Transaction;
 import tn.zeros.marketmaster.service.TransactionService;
 
 import java.util.List;
