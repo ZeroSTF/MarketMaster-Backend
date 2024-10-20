@@ -1,5 +1,6 @@
 package tn.zeros.marketmaster.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.zeros.marketmaster.entity.enums.GameStatus;
@@ -8,6 +9,8 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -25,6 +28,9 @@ public class Game implements Serializable {
 
     private LocalDate simulationStartDate;
     private LocalDate simulationEndDate;
+    private LocalDateTime startTimestamp ;
+    private LocalDateTime endTimestamp ;
+
 
     @Column(columnDefinition = "BIGINT") // Being stored as nanoseconds at the moment
     private Duration maxPlayTime;
@@ -33,4 +39,8 @@ public class Game implements Serializable {
     @JoinColumn(name = "creator_id")
     private User creator;
     private GameStatus status;
+
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
+
+    private Set<GamePortfolio> gamePortfolios = new HashSet<>();
 }

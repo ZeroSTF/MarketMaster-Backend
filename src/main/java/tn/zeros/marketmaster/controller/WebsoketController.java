@@ -18,8 +18,6 @@ import java.util.List;
 @Controller
 @RequiredArgsConstructor
 public class WebsoketController {
-    @Value("${SERVER_PORT}")
-    private String serverport;
 
     private final SimpMessagingTemplate messagingTemplate;
 

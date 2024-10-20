@@ -1,11 +1,16 @@
 package tn.zeros.marketmaster.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.zeros.marketmaster.dto.JoinGameDto;
+import tn.zeros.marketmaster.dto.JoinGameResponseDto;
+import tn.zeros.marketmaster.dto.NewGameDto;
+import tn.zeros.marketmaster.dto.NewGameResponseDto;
 import tn.zeros.marketmaster.entity.Game;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
@@ -18,24 +23,22 @@ import tn.zeros.marketmaster.service.JwtTokenService;
 @RequestMapping("/api/games")
 public class GameController {
 
-    private static final Logger logger = LoggerFactory.getLogger(GameController.class); // Logger instance
 
     private final GameService gameService;
-    private final UserRepository userRepository;
-    private final JwtTokenService jwtTokenService;
 
-    @PostMapping
-    public ResponseEntity<?> createGame(@RequestBody Game game, @RequestParam String username) {
+    @PostMapping("/create")
+    public ResponseEntity<?> createGame(@RequestBody NewGameDto game) {
 
-        // Fetch the user by username
-
-        User creator = userRepository.findByUsername(username).orElseThrow(()-> new UserNotFoundException("user not found with email :"+username));
-
-
-
-        // Call the gameService to create the game
-        Game createdGame = gameService.createGame(game, creator);
+        NewGameResponseDto createdGame = gameService.createGame(game);
 
         return ResponseEntity.ok(createdGame);
+    }
+
+    @PostMapping("/{gameId}/join")
+    public ResponseEntity<JoinGameResponseDto> joinGame(
+            @PathVariable Long gameId,
+            @RequestBody JoinGameDto joinGameDto) {
+        JoinGameResponseDto gameResponse = gameService.joinGame(gameId, joinGameDto);
+        return ResponseEntity.ok(gameResponse);
     }
 }
