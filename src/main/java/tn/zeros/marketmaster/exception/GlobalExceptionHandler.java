@@ -55,6 +55,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Username not found");
     }
 
+    @ExceptionHandler(AssetFetchException.class)
+    public ResponseEntity<String> handleAssetFetchException(AssetFetchException e) {
+        log.error("Error fetching assets: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to fetch assets");
+    }
+
+    @ExceptionHandler(FlaskServiceRegistrationException.class)
+    public ResponseEntity<String> handleFlaskServiceRegistrationException(FlaskServiceRegistrationException e) {
+        log.error("Error registering assets with Flask service: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to register assets with Flask service");
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception e) {
         log.error("Unexpected error: ", e);
