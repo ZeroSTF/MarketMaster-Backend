@@ -20,6 +20,7 @@ import tn.zeros.marketmaster.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -46,7 +47,7 @@ public class PortfolioService  {
         return dailyChange.subtract(BigDecimal.valueOf(priceKnow));
     }
 
-    public double calculateReturn(Long userId) {
+    public double calculateReturn(Long userId, int year) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -57,7 +58,7 @@ public class PortfolioService  {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDate = LocalDateTime.now().withHour(0).minusYears(1);
+        LocalDateTime startDate = LocalDateTime.now().withHour(0).minusYears(year);
 
         Map<LocalDateTime, Double> totalValue = portfolio.getTotalValue();
 
@@ -101,7 +102,7 @@ public class PortfolioService  {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         Portfolio portfolio = user.getPortfolio();
         OverviewDTO overview = new OverviewDTO();
-        overview.setAnnualReturn(calculateReturn(userId));
+        overview.setAnnualReturn(calculateReturn(userId,1));
         overview.setCash(portfolio.getCash());
         overview.setTotalValue(portfolio.getTotalValue().get(LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0)));
         overview.setCashPercentage((portfolio.getCash()-calculateCashYesterday(userId))*100/calculateCashYesterday(userId));
