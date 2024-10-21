@@ -1,17 +1,21 @@
 package tn.zeros.marketmaster.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import tn.zeros.marketmaster.dto.AssetDiscoverDTO;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import tn.zeros.marketmaster.dto.AssetDTO;
+import tn.zeros.marketmaster.dto.PageResponseDTO;
+import tn.zeros.marketmaster.dto.RegisterAssetsRequest;
+import tn.zeros.marketmaster.entity.Asset;
+import tn.zeros.marketmaster.exception.AssetFetchException;
+import tn.zeros.marketmaster.exception.FlaskServiceRegistrationException;
 import tn.zeros.marketmaster.repository.AssetRepository;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,57 +23,57 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AssetService {
     private final AssetRepository assetRepository;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final ObjectMapper objectMapper;
-    private final AssetDataService assetDataService;
+    private final WebClient webClient;
 
-    public List<String> getAllSymbols() {
-        return assetRepository.findAllSymbols();
-    }
-
-    public AssetDiscoverDTO parseResponse(String response, String symbol) {
+    public PageResponseDTO<AssetDTO> getAllAssets(Integer page, Integer size) {
         try {
-            JsonNode rootNode = objectMapper.readTree(response);
-            JsonNode resultNode = rootNode.path("chart").path("result").get(0);
-            JsonNode quoteNode = resultNode.path("indicators").path("quote").get(0);
-            JsonNode metaNode = resultNode.path("meta");
+            Page<Asset> assetPage = findAll(PageRequest.of(page, size));
 
-            double price = metaNode.path("regularMarketPrice").asDouble();
-            double previousClose = metaNode.path("chartPreviousClose").asDouble();
-            double change = price - previousClose;
+            List<String> symbols = assetPage.getContent().stream()
+                    .map(Asset::getSymbol)
+                    .collect(Collectors.toList());
 
-            return new AssetDiscoverDTO(
-                    symbol,
-                    quoteNode.path("open").get(0).asDouble(),
-                    quoteNode.path("high").get(0).asDouble(),
-                    quoteNode.path("low").get(0).asDouble(),
-                    price,
-                    quoteNode.path("volume").get(0).asLong(),
-                    metaNode.path("regularMarketTime").asText(),
-                    previousClose,
-                    change,
-                    String.format("%.2f%%", (change / previousClose) * 100)
+            registerAssetsWithFlask(symbols)
+                    .subscribe(
+                            success -> log.debug("Assets registered successfully with Flask service"),
+                            error -> log.error("Failed to register assets with Flask service", error)
+                    );
+
+            return new PageResponseDTO<>(
+                    assetPage.getContent().stream()
+                            .map(AssetDTO::fromEntity)
+                            .collect(Collectors.toList()),
+                    assetPage.getNumber(),
+                    assetPage.getSize(),
+                    assetPage.getTotalElements(),
+                    assetPage.getTotalPages(),
+                    assetPage.isLast()
             );
         } catch (Exception e) {
-            log.error("Error parsing response for symbol: {} - {}", symbol, e.getMessage());
-            return null;
+            log.error("Error fetching assets", e);
+            throw new AssetFetchException("Failed to fetch assets", e);
         }
     }
 
-    public List<AssetDiscoverDTO> fetchDailyData() {
-        return getAllSymbols().parallelStream()
-                .map(symbol -> {
-                    String response = assetDataService.getAssetData(symbol);
-                    return parseResponse(response, symbol);
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    private Page<Asset> findAll(PageRequest pageRequest) {
+        try {
+            return assetRepository.findAll(pageRequest);
+        } catch (Exception e) {
+            log.error("Error fetching assets with pagination: {}", e.getMessage());
+            throw new AssetFetchException("Failed to fetch assets", e);
+        }
     }
 
-    @Scheduled(fixedRateString = "${asset.update.interval}")
-    public void sendStockUpdates() {
-        List<AssetDiscoverDTO> dailyDto = this.fetchDailyData();
-        messagingTemplate.convertAndSend("/topic/market", dailyDto);
+    private Mono<Void> registerAssetsWithFlask(List<String> symbols) {
+        return webClient.post()
+                .uri("/api/assets/register")
+                .bodyValue(new RegisterAssetsRequest(symbols))
+                .retrieve()
+                .onStatus(
+                        status -> !status.is2xxSuccessful(),
+                        response -> Mono.error(new FlaskServiceRegistrationException("Flask service registration failed"))
+                )
+                .bodyToMono(Void.class);
     }
 
     public double getCurrentPrice(Long assetId) {
