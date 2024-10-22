@@ -12,8 +12,8 @@ import tn.zeros.marketmaster.service.LimitOrderService;
 @Slf4j
 public class LimitOrderController {
     private final LimitOrderService limitOrderService;
-    @PostMapping("/add/{id}")
-    public LimitOrderDTO addOrder(@PathVariable("id") Long id, @RequestBody LimitOrderDTO limitOrderDTO) {
-        return limitOrderService.AddLimitOrder(id,limitOrderDTO);
+    @PostMapping("/add/{userName}")
+    public LimitOrderDTO addOrder(@PathVariable("userName") String userName, @RequestBody LimitOrderDTO limitOrderDTO) {
+        return limitOrderService.addLimitOrder(userName,limitOrderDTO);
     }
 }

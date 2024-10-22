@@ -1,20 +1,13 @@
 package tn.zeros.marketmaster.service;
-
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import tn.zeros.marketmaster.dto.HoldingDTO;
 import tn.zeros.marketmaster.dto.TransactionDTO;
 import tn.zeros.marketmaster.entity.*;
-import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.*;
 import tn.zeros.marketmaster.repository.*;
-
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 @Slf4j
 @Service
@@ -28,8 +21,8 @@ public class TransactionService {
     private final AssetService assetService;
     private final HoldingService holdingService;
 
-    public List<TransactionDTO> GetStatBySymbol(Long userId, String symbol){
-        User user = userRepository.findById(userId)
+    public List<TransactionDTO> getStatBySymbol(String userName, String symbol){
+        User user = userRepository.findByUsername(userName)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         Portfolio portfolio = user.getPortfolio();
         Set<Transaction> transactions= portfolio.getTransactions();
@@ -44,13 +37,13 @@ public class TransactionService {
     }
 
    @Transactional
-    public TransactionDTO ajoutUneTransaction(Long userId, TransactionDTO transactionDTO) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    public TransactionDTO addTransaction(String userName, TransactionDTO transactionDTO) {
+       User user = userRepository.findByUsername(userName)
+               .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Portfolio portfolio = user.getPortfolio();
         if (portfolio == null) {
-            throw new PortfolioNotFoundException("Portfolio not found for user: " + userId);
+            throw new PortfolioNotFoundException("Portfolio not found for user: " + userName);
         }
 
         if (transactionDTO.getType() == null) {

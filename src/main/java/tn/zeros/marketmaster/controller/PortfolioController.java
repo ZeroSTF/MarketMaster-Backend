@@ -26,11 +26,11 @@ public class PortfolioController {
     private final PortfolioService portfolioService;
     private final HoldingService holdingService;
 
-    @PostMapping("new/{userId}")
-    public ResponseEntity<PortfolioDTO> createNewPortfolio(@PathVariable Long userId) {
+    @PostMapping("new/{userName}")
+    public ResponseEntity<PortfolioDTO> createNewPortfolio(@PathVariable String userName) {
 
         try {
-            PortfolioDTO newPortfolio = portfolioService.newPortfolio(userId);
+            PortfolioDTO newPortfolio = portfolioService.newPortfolio(userName);
             return ResponseEntity.status(HttpStatus.CREATED).body(newPortfolio);
         } catch (UsernameNotFoundException e) {
 
@@ -41,24 +41,10 @@ public class PortfolioController {
         }
     }
 
-
-    /*@PutMapping("/{id}")
-    public ResponseEntity<PortfolioDTO> updatePortfolio(@PathVariable Long id, @RequestBody PortfolioDTO portfolioDTO) {
+    @PostMapping("/overview/{userName}")
+    public ResponseEntity<OverviewDTO> getOverviewData(@PathVariable("userName") String userName) {
         try {
-            portfolioDTO.setId(id);
-            PortfolioDTO updatedPortfolio = portfolioService.updatePortfolio(portfolioDTO);
-            return ResponseEntity.ok(updatedPortfolio);
-        } catch (PortfolioNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }*/
-
-    @PostMapping("/overview/{id}")
-    public ResponseEntity<OverviewDTO> getOverviewData(@PathVariable("id") Long id) {
-        try {
-            OverviewDTO overviewData = portfolioService.prepareOverview(id);
+            OverviewDTO overviewData = portfolioService.prepareOverview(userName);
             return ResponseEntity.ok(overviewData);
         } catch (PortfolioNotFoundException e) {
             return ResponseEntity.notFound().build();
@@ -69,10 +55,10 @@ public class PortfolioController {
         }
     }
 
-    @PostMapping("/totalVal/{id}")
-    public ResponseEntity<List<Map<LocalDateTime, Double>>> totalVal(@PathVariable("id") Long id) {
+    @PostMapping("/totalVal/{userName}")
+    public ResponseEntity<List<Map<LocalDateTime, Double>>> totalVal(@PathVariable("userName") String userName) {
         try {
-            List<Map<LocalDateTime, Double>> totalValues = portfolioService.getTotalValueByPortfolioId(id);
+            List<Map<LocalDateTime, Double>> totalValues = portfolioService.getTotalValueByPortfolioId(userName);
             return ResponseEntity.ok(totalValues);
         } catch (PortfolioNotFoundException e) {
             return ResponseEntity.notFound().build();
@@ -83,10 +69,10 @@ public class PortfolioController {
         }
     }
 
-    @PostMapping("/holding/{id}")
-    public ResponseEntity<List<HoldingDTO>> getHoldingData(@PathVariable("id") Long id) {
+    @PostMapping("/holding/{userName}")
+    public ResponseEntity<List<HoldingDTO>> getHoldingData(@PathVariable("userName") String userName) {
         try {
-            List<HoldingDTO> holdingData = holdingService.getAll(id);
+            List<HoldingDTO> holdingData = holdingService.getAll(userName);
             return ResponseEntity.ok(holdingData);
         } catch (PortfolioNotFoundException e) {
             return ResponseEntity.notFound().build();

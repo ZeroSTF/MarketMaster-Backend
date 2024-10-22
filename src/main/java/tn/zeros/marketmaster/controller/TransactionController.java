@@ -15,13 +15,8 @@ import java.util.List;
 @Slf4j
 public class TransactionController {
     private final TransactionService transactionService;
-    @PostMapping("/ajout/{id}")
-    public TransactionDTO ajout(@PathVariable("id") Long id, @RequestBody TransactionDTO t){
-        return transactionService.ajoutUneTransaction(id,t);
+    @PostMapping("/ajout/{userName}")
+    public TransactionDTO ajout(@PathVariable("userName") String userName, @RequestBody TransactionDTO t){
+        return transactionService.addTransaction(userName,t);
     }
-    @PostMapping("/stat/{id}/{s}")
-    public List<TransactionDTO> getstat(@PathVariable("id") Long id,@PathVariable("s") String symbol){
-
-        return transactionService.GetStatBySymbol(id,symbol);
-        }
 }

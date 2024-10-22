@@ -31,12 +31,12 @@ public class LimitOrderService {
     private final TransactionService transactionService;
     private final AssetService assetService;
 
-    public LimitOrderDTO AddLimitOrder(Long userId , LimitOrderDTO limitOrderDTO) {
+    public LimitOrderDTO addLimitOrder(String userName , LimitOrderDTO limitOrderDTO) {
 
         LimitOrder limitOrder =limitOrderDTO.toEntity();
         Asset asset = assetRepository.findBySymbol(limitOrderDTO.getSymbol());
         limitOrder.setAsset(asset);
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUsername(userName)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         limitOrder.setUser(user);
         limitOrderRepository.save(limitOrder);
@@ -53,11 +53,11 @@ public class LimitOrderService {
                 transactionDTO.setSymbol(limitOrder.getAsset().getSymbol());
                 transactionDTO.setQuantity(limitOrder.getQuantity());
                 transactionDTO.setType(limitOrder.getType());
-                Long userId = limitOrder.getUser().getId();
+                String userName = limitOrder.getUser().getUsername();
                 limitOrder.setExecutionTimestamp(LocalDateTime.now());
                 limitOrder.setStatus(OrderStatus.EXECUTED);
                 limitOrderRepository.save(limitOrder);
-                transactionService.ajoutUneTransaction(userId, transactionDTO);
+                transactionService.addTransaction(userName, transactionDTO);
             } else if (limitOrder.getStatus().equals(OrderStatus.CANCELLED)) {
                 limitOrderRepository.delete(limitOrder);
             }
