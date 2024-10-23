@@ -12,6 +12,7 @@ import tn.zeros.marketmaster.dto.HoldingDTO;
 import tn.zeros.marketmaster.entity.Holding;
 import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.entity.User;
+import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.HoldingRepository;
 import tn.zeros.marketmaster.repository.UserRepository;
@@ -41,11 +42,16 @@ public class HoldingService {
         holdingRepository.save(holding);
     }
 
-    public List<HoldingDTO> getAll(String userName) {
-        User user = userRepository.findByUsername(userName)
+    public List<HoldingDTO> getAll(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         Portfolio portfolio = user.getPortfolio();
-        Set<Holding> holdings =portfolio.getHoldings();
+        if (portfolio == null) {
+            throw new PortfolioNotFoundException("Portfolio not found for user: " + username);
+        }
+
+        Set<Holding> holdings = portfolio.getHoldings();
         return holdings.stream()
                 .map(HoldingDTO::fromEntity)
                 .toList();

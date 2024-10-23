@@ -21,8 +21,8 @@ public class TransactionService {
     private final AssetService assetService;
     private final HoldingService holdingService;
 
-    public List<TransactionDTO> getStatBySymbol(String userName, String symbol){
-        User user = userRepository.findByUsername(userName)
+    public List<TransactionDTO> getStatBySymbol(String username, String symbol){
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         Portfolio portfolio = user.getPortfolio();
         Set<Transaction> transactions= portfolio.getTransactions();
@@ -37,13 +37,13 @@ public class TransactionService {
     }
 
    @Transactional
-    public TransactionDTO addTransaction(String userName, TransactionDTO transactionDTO) {
-       User user = userRepository.findByUsername(userName)
+    public TransactionDTO addTransaction(String username, TransactionDTO transactionDTO) {
+       User user = userRepository.findByUsername(username)
                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Portfolio portfolio = user.getPortfolio();
         if (portfolio == null) {
-            throw new PortfolioNotFoundException("Portfolio not found for user: " + userName);
+            throw new PortfolioNotFoundException("Portfolio not found for user: " + username);
         }
 
         if (transactionDTO.getType() == null) {

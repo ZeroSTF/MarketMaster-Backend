@@ -7,6 +7,7 @@ import tn.zeros.marketmaster.dto.OverviewDTO;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
 import tn.zeros.marketmaster.entity.*;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
+import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.HoldingRepository;
 import tn.zeros.marketmaster.repository.PortfolioRepository;
@@ -33,8 +34,8 @@ public class PortfolioService {
         return LocalDateTime.now().minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
     }
 
-    public BigDecimal getDailyChange(String userName) {
-        User user = userRepository.findByUsername(userName)
+    public BigDecimal getDailyChange(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
         Portfolio portfolio = user.getPortfolio();
         Set<Holding> holdings = holdingRepository.findAllByPortfolio(portfolio);
@@ -47,8 +48,8 @@ public class PortfolioService {
         return dailyChange.subtract(BigDecimal.valueOf(priceNow));
     }
 
-    public double calculateReturn(String userName, int year) {
-        User user = userRepository.findByUsername(userName)
+    public double calculateReturn(String username, int year) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
         Portfolio portfolio = user.getPortfolio();
 
@@ -76,8 +77,8 @@ public class PortfolioService {
         return endEntry.getValue() - startEntry.getValue();
     }
 
-    public double calculateCashYesterday(String userName) {
-        User user = userRepository.findByUsername(userName)
+    public double calculateCashYesterday(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
         Portfolio portfolio = user.getPortfolio();
         Set<Transaction> transactions = portfolio.getTransactions();
@@ -90,27 +91,33 @@ public class PortfolioService {
         return totalHolding - portfolio.getTotalValue().get(getStartOfDay());
     }
 
-    public OverviewDTO prepareOverview(String userName) {
-        User user = userRepository.findByUsername(userName)
+    public OverviewDTO prepareOverview(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
+
         Portfolio portfolio = user.getPortfolio();
+        if (portfolio == null) {
+            throw new PortfolioNotFoundException("Portfolio not found for user: " + username);
+        }
+
         OverviewDTO overview = new OverviewDTO();
 
-        overview.setAnnualReturn(calculateReturn(userName, 1));
+        overview.setAnnualReturn(calculateReturn(username, 1));
         overview.setCash(portfolio.getCash());
+
         double totalValueToday = portfolio.getTotalValue().get(getStartOfDay());
         double totalValueYesterday = portfolio.getTotalValue().get(getStartOfYesterday());
 
         overview.setTotalValue(totalValueToday);
-        overview.setCashPercentage((portfolio.getCash() - calculateCashYesterday(userName)) * 100 / calculateCashYesterday(userName));
+        overview.setCashPercentage((portfolio.getCash() - calculateCashYesterday(username)) * 100 / calculateCashYesterday(username));
         overview.setTotalValuePercentage((totalValueToday - totalValueYesterday) * 100 / totalValueToday);
-        overview.setDailyChange(getDailyChange(userName));
+        overview.setDailyChange(getDailyChange(username));
 
         return overview;
     }
 
-    public double calculatePortfolioHolding(String userName) {
-        User user = userRepository.findByUsername(userName)
+    public double calculatePortfolioHolding(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
         Portfolio portfolio = user.getPortfolio();
 
@@ -129,9 +136,10 @@ public class PortfolioService {
     }
 
     @Transactional
-    public PortfolioDTO newPortfolio(String userName) {
-        User user = userRepository.findByUsername(userName)
+    public PortfolioDTO newPortfolio(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
+
         Portfolio portfolio = new Portfolio();
         portfolio.setTotalValue(new HashMap<>());
         portfolio.getTotalValue().put(getStartOfDay(), 100000D);
@@ -144,8 +152,8 @@ public class PortfolioService {
         return PortfolioDTO.fromEntity(savedPortfolio);
     }
 
-    public double calculateInvestment(String userName) {
-        User user = userRepository.findByUsername(userName)
+    public double calculateInvestment(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
         Portfolio portfolio = user.getPortfolio();
         Set<Transaction> transactions = portfolio.getTransactions();
@@ -167,16 +175,19 @@ public class PortfolioService {
         }
     }
 
-    public List<Map<LocalDateTime, Double>> getTotalValueByPortfolioId(String userName) {
-        User user = userRepository.findByUsername(userName)
+    public List<Map<LocalDateTime, Double>> getTotalValueByPortfolioId(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
 
         Portfolio portfolio = user.getPortfolio();
+        if (portfolio == null) {
+            throw new PortfolioNotFoundException("Portfolio not found for user: " + username);
+        }
+
         List<Map<LocalDateTime, Double>> totalValueList = new ArrayList<>();
         totalValueList.add(portfolio.getTotalValue());
 
         return totalValueList;
-
     }
 }
 

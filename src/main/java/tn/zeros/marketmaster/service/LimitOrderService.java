@@ -6,13 +6,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.LimitOrderDTO;
 import tn.zeros.marketmaster.dto.TransactionDTO;
-
 import tn.zeros.marketmaster.entity.Asset;
 import tn.zeros.marketmaster.entity.LimitOrder;
-import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.entity.enums.OrderStatus;
-import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.AssetRepository;
 import tn.zeros.marketmaster.repository.LimitOrderRepository;
@@ -31,12 +28,12 @@ public class LimitOrderService {
     private final TransactionService transactionService;
     private final AssetService assetService;
 
-    public LimitOrderDTO addLimitOrder(String userName , LimitOrderDTO limitOrderDTO) {
+    public LimitOrderDTO addLimitOrder(String username , LimitOrderDTO limitOrderDTO) {
 
         LimitOrder limitOrder =limitOrderDTO.toEntity();
         Asset asset = assetRepository.findBySymbol(limitOrderDTO.getSymbol());
         limitOrder.setAsset(asset);
-        User user = userRepository.findByUsername(userName)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         limitOrder.setUser(user);
         limitOrderRepository.save(limitOrder);

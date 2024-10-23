@@ -15,8 +15,8 @@ import java.util.List;
 @Slf4j
 public class TransactionController {
     private final TransactionService transactionService;
-    @PostMapping("/ajout/{userName}")
-    public TransactionDTO ajout(@PathVariable("userName") String userName, @RequestBody TransactionDTO t){
-        return transactionService.addTransaction(userName,t);
+    @PostMapping("/ajout/{username}")
+    public TransactionDTO ajout(@PathVariable("username") String username, @RequestBody TransactionDTO t){
+        return transactionService.addTransaction(username,t);
     }
 }
