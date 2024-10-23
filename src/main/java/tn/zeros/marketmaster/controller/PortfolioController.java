@@ -20,20 +20,20 @@ public class PortfolioController {
     private final HoldingService holdingService;
 
 
-    @GetMapping("/overview/{userName}")
-    public ResponseEntity<OverviewDTO> getOverviewData(@PathVariable("userName") String username) {
+    @GetMapping("/overview/{username}")
+    public ResponseEntity<OverviewDTO> getOverviewData(@PathVariable("username") String username) {
         OverviewDTO overviewData = portfolioService.prepareOverview(username);
         return ResponseEntity.ok(overviewData);
     }
 
-    @GetMapping("/totalVal/{userName}")
-    public ResponseEntity<List<Map<LocalDateTime, Double>>> totalVal(@PathVariable("userName") String username) {
+    @GetMapping("/totalVal/{username}")
+    public ResponseEntity<List<Map<LocalDateTime, Double>>> totalVal(@PathVariable("username") String username) {
         List<Map<LocalDateTime, Double>> totalValues = portfolioService.getTotalValueByPortfolioId(username);
         return ResponseEntity.ok(totalValues);
     }
 
-    @GetMapping("/holding/{userName}")
-    public ResponseEntity<List<HoldingDTO>> getHoldingData(@PathVariable("userName") String username) {
+    @GetMapping("/holding/{username}")
+    public ResponseEntity<List<HoldingDTO>> getHoldingData(@PathVariable("username") String username) {
         List<HoldingDTO> holdingData = holdingService.getAll(username);
         return ResponseEntity.ok(holdingData);
     }
