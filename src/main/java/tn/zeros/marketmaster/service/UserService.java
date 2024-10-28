@@ -16,6 +16,7 @@ import tn.zeros.marketmaster.repository.UserRepository;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PortfolioService portfolioService;
 
     public User signup(SignupRequestDTO signupRequest) {
         if (userRepository.findByEmailOrUsername(signupRequest.getEmail(), signupRequest.getUsername()).isPresent()) {
@@ -30,7 +31,7 @@ public class UserService {
                 .password(passwordEncoder.encode(signupRequest.getPassword()))
                 .role(Role.USER)
                 .build();
-
+        portfolioService.newPortfolio(user.getUsername());
         return userRepository.save(user);
     }
 

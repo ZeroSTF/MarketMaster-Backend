@@ -64,7 +64,7 @@ public class AuthenticationService {
 
     public UserDTO signup(SignupRequestDTO signupRequest) {
         User user = userService.signup(signupRequest);
-        portfolioService.newPortfolio(user.getId());
+        portfolioService.newPortfolio(user.getUsername());
         return UserDTO.fromEntity(user);
     }
 
