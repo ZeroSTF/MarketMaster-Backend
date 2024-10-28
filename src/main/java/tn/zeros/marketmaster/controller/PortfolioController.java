@@ -20,7 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/portf")
+@RequestMapping("/portf")
 @Slf4j
 public class PortfolioController {
     private final PortfolioService portfolioService;
@@ -41,19 +41,22 @@ public class PortfolioController {
         }
     }
 
-
-    /*@PutMapping("/{id}")
-    public ResponseEntity<PortfolioDTO> updatePortfolio(@PathVariable Long id, @RequestBody PortfolioDTO portfolioDTO) {
-        try {
-            portfolioDTO.setId(id);
-            PortfolioDTO updatedPortfolio = portfolioService.updatePortfolio(portfolioDTO);
-            return ResponseEntity.ok(updatedPortfolio);
-        } catch (PortfolioNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }*/
+    /*
+     * @PutMapping("/{id}")
+     * public ResponseEntity<PortfolioDTO> updatePortfolio(@PathVariable Long
+     * id, @RequestBody PortfolioDTO portfolioDTO) {
+     * try {
+     * portfolioDTO.setId(id);
+     * PortfolioDTO updatedPortfolio =
+     * portfolioService.updatePortfolio(portfolioDTO);
+     * return ResponseEntity.ok(updatedPortfolio);
+     * } catch (PortfolioNotFoundException e) {
+     * return ResponseEntity.notFound().build();
+     * } catch (EntityNotFoundException e) {
+     * return ResponseEntity.badRequest().build();
+     * }
+     * }
+     */
 
     @PostMapping("/overview/{id}")
     public ResponseEntity<OverviewDTO> getOverviewData(@PathVariable("id") Long id) {

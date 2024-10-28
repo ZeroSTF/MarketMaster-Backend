@@ -11,7 +11,7 @@ import tn.zeros.marketmaster.service.AuthenticationService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @Slf4j
 public class AuthController {
     private final AuthenticationService authenticationService;

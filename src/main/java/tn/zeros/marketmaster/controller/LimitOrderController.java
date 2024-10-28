@@ -8,7 +8,7 @@ import tn.zeros.marketmaster.service.LimitOrderService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/order")
+@RequestMapping("/order")
 @Slf4j
 public class LimitOrderController {
     private final LimitOrderService limitOrderService;

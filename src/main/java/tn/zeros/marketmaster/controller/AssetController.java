@@ -10,7 +10,7 @@ import tn.zeros.marketmaster.service.AssetService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/asset")
+@RequestMapping("/asset")
 @Slf4j
 public class AssetController {
     private final AssetService assetService;

@@ -12,7 +12,7 @@ import tn.zeros.marketmaster.service.UserService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 @Slf4j
 public class UserController {
     private final UserService userService;
