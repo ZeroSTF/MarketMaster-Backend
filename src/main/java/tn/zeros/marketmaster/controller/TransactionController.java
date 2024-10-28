@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/tran")
+@RequestMapping("/tran")
 @Slf4j
 public class TransactionController {
     private final TransactionService transactionService;

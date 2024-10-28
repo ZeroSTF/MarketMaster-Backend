@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/portf")
+@RequestMapping("/portf")
 @Slf4j
 public class PortfolioController {
     private final PortfolioService portfolioService;
