@@ -117,18 +117,14 @@ public class GameService {
     }
     @Transactional
     public List<GameDto> getCurrentGames() {
-        // Retrieve the current user
         User currentUser = userRepository.findByUsername(
                         SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // Fetch active games
         List<Game> activeGames = gameRepository.findByStatus(GameStatus.ACTIVE);
 
-        // Fetch games where the current user is a participant
         List<Game> participatedGames = gameParticipationRepository.findGamesByUser(currentUser);
 
-        // Filter out games where the user is already a participant
         List<Game> nonParticipatedGames = activeGames.stream()
                 .filter(game -> !participatedGames.contains(game))
                 .collect(Collectors.toList());
@@ -140,14 +136,12 @@ public class GameService {
     }
 
 
-    // 2. Get upcoming games
     @Transactional
     public List<GameDto> getUpcomingGames() {
         List<Game> upcomingGames = gameRepository.findByStatus(GameStatus.UPCOMING);
         return upcomingGames.stream().map(GameDto::fromEntity).collect(Collectors.toList());
     }
 
-    // 3. Get games joined by a specific user
     @Transactional
     public List<GameDto> getUserGames(String username) {
         User user = userRepository.findByUsername(username)
@@ -208,10 +202,8 @@ public class GameService {
 
     @Transactional
     public PlayerPerformanceDto getPlayerPerformance(String username) {
-        // Fetch all game participations for the user
         List<GameParticipation> participations = gameParticipationRepository.findByUserUsername(username);
 
-        // Calculate total stats
         int gamesPlayed = participations.size();
         int gamesWon = calculateGamesWon(participations);
         BigDecimal totalProfit = calculateTotalProfit(username);
@@ -221,7 +213,6 @@ public class GameService {
         return new PlayerPerformanceDto(username, gamesPlayed, gamesWon, winRate, totalProfit, averageProfit);
     }
 
-    // Helper method to calculate total profit across all games
     private BigDecimal calculateTotalProfit(String username) {
         List<GamePortfolio> portfolios = gamePortfolioRepository.findByUserUsername(username);
         return portfolios.stream()
@@ -231,7 +222,6 @@ public class GameService {
 
 
 
-    // Helper method to count games won (define criteria for 'win')
     private int calculateGamesWon(List<GameParticipation> participations) {
         return (int) participations.stream()
                 .filter(participation -> participation.getGame().getStatus() == GameStatus.COMPLETED)
@@ -239,13 +229,11 @@ public class GameService {
                 .count();
     }
 
-    // Check if player won based on profit or ranking
     private boolean didPlayerWin(GameParticipation participation) {
         GamePortfolio portfolio = gamePortfolioRepository.findByUserAndGame(participation.getUser(), participation.getGame())
                 .orElseThrow(() -> new EntityNotFoundException("Portfolio not found"));
 
         BigDecimal profit = calculateProfit(portfolio);
-        // Define criteria, e.g., top profit in the game
         return profit.compareTo(BigDecimal.ZERO) > 0;
     }
 
