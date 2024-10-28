@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 
 @Data
 public class NewGameDto {
+    private String title;
+
     private String description;
     private LocalDateTime startTimestamp ;
     private LocalDateTime endTimestamp ;
@@ -17,7 +19,7 @@ public class NewGameDto {
     private String username ;
     public  Game toEntity ()
     {
-        return Game.builder().description(this.description)
+        return Game.builder().title(this.title).description(this.description)
                 .startTimestamp(this.startTimestamp)
                 .endTimestamp(this.endTimestamp)
                 .maxPlayTime(this.maxPlayTime).build();

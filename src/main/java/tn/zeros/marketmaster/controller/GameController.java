@@ -7,16 +7,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.zeros.marketmaster.dto.JoinGameDto;
-import tn.zeros.marketmaster.dto.JoinGameResponseDto;
-import tn.zeros.marketmaster.dto.NewGameDto;
-import tn.zeros.marketmaster.dto.NewGameResponseDto;
+import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.entity.Game;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.UserRepository;
 import tn.zeros.marketmaster.service.GameService;
 import tn.zeros.marketmaster.service.JwtTokenService;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,4 +40,42 @@ public class GameController {
         JoinGameResponseDto gameResponse = gameService.joinGame(gameId, joinGameDto);
         return ResponseEntity.ok(gameResponse);
     }
+    @GetMapping("/active")
+    public ResponseEntity<List<GameDto>> getCurrentGames() {
+        List<GameDto> activeGames = gameService.getCurrentGames();
+        return ResponseEntity.ok(activeGames);
+    }
+
+    @GetMapping("/upcoming")
+    public ResponseEntity<List<GameDto>> getUpcomingGames() {
+        List<GameDto> upcomingGames = gameService.getUpcomingGames();
+        return ResponseEntity.ok(upcomingGames);
+    }
+
+
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<GameDto>> getUserGames(@PathVariable String username) {
+        List<GameDto> userGames = gameService.getUserGames(username);
+        return ResponseEntity.ok(userGames);
+    }
+
+    @GetMapping("/leaderboard/{gameId}")
+    public ResponseEntity<List<LeaderboardEntryDto>> getGameLeaderboard(@PathVariable Long gameId) {
+        List<LeaderboardEntryDto> leaderboard = gameService.getGameLeaderboard(gameId);
+        return ResponseEntity.ok(leaderboard);
+    }
+
+    @GetMapping("/globalleaderboard")
+    public ResponseEntity<List<LeaderboardEntryDto>> getGlobalLeaderboard() {
+        List<LeaderboardEntryDto> leaderboard = gameService.getGlobalLeaderboard();
+        return ResponseEntity.ok(leaderboard);
+    }
+
+    @GetMapping("/globalperformance/{username}")
+    public ResponseEntity<PlayerPerformanceDto> getPlayerPerformance(@PathVariable String username) {
+        PlayerPerformanceDto performanceDto = gameService.getPlayerPerformance(username);
+        return ResponseEntity.ok(performanceDto);
+    }
+
+
 }
