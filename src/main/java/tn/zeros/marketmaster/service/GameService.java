@@ -12,6 +12,7 @@ import tn.zeros.marketmaster.entity.GameParticipation;
 import tn.zeros.marketmaster.entity.GamePortfolio;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.entity.enums.GameStatus;
+import tn.zeros.marketmaster.exception.GameNotFoundException;
 import tn.zeros.marketmaster.repository.GameParticipationRepository;
 import tn.zeros.marketmaster.repository.GamePortfolioRepository;
 import tn.zeros.marketmaster.repository.GameRepository;
@@ -55,7 +56,6 @@ public class GameService {
 
         LocalDate simulationStartDate = getRandomDateWithinLast20Years();
 
-        LocalDate simulationEndDate = simulationStartDate.plusDays(3);
 
         Game game = gameDto.toEntity();
         game.setSimulationStartDate(simulationStartDate);
@@ -86,7 +86,7 @@ public class GameService {
     @Transactional
     public JoinGameResponseDto joinGame(Long gameId, String username) {
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new EntityNotFoundException("No game found with ID: " + gameId));
+                .orElseThrow(() -> new GameNotFoundException("No game found with ID: " + gameId));
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("No user found with username: " + username));
