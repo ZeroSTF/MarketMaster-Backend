@@ -59,7 +59,6 @@ public class GameService {
 
         Game game = gameDto.toEntity();
         game.setSimulationStartDate(simulationStartDate);
-        game.setSimulationEndDate(simulationEndDate);
         game.setCreator(creator);
         game.setCreationTimestamp(LocalDateTime.now());
         game.setStatus(GameStatus.ACTIVE);
@@ -85,12 +84,12 @@ public class GameService {
         return NewGameResponseDto.fromEntity(createdGame);
     }
     @Transactional
-    public JoinGameResponseDto joinGame(Long gameId, JoinGameDto joinGameDto) {
+    public JoinGameResponseDto joinGame(Long gameId, String username) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new EntityNotFoundException("No game found with ID: " + gameId));
 
-        User user = userRepository.findByUsername(joinGameDto.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("No user found with username: " + joinGameDto.getUsername()));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("No user found with username: " + username));
 
         boolean isAlreadyParticipating = gameParticipationRepository.existsByGameAndUser(game, user);
         if (isAlreadyParticipating) {
@@ -113,7 +112,7 @@ public class GameService {
         gamePortfolioRepository.save(portfolio);
 
 
-        return new JoinGameResponseDto("Successfully joined the game and portfolio created", gameId, joinGameDto.getUsername());
+        return new JoinGameResponseDto("Successfully joined the game and portfolio created", gameId, username);
     }
     @Transactional
     public List<GameDto> getCurrentGames() {

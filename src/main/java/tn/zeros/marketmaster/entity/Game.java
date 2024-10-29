@@ -27,7 +27,6 @@ public class Game implements Serializable {
     private LocalDateTime creationTimestamp;
 
     private LocalDate simulationStartDate;
-    private LocalDate simulationEndDate;
     private LocalDateTime startTimestamp ;
     private LocalDateTime endTimestamp ;
 
@@ -40,7 +39,5 @@ public class Game implements Serializable {
     private User creator;
     private GameStatus status;
 
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
 
-    private Set<GamePortfolio> gamePortfolios = new HashSet<>();
 }

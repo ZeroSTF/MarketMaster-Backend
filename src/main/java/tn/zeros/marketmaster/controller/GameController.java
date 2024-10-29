@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/games")
+@RequestMapping("/games")
 public class GameController {
 
 
@@ -36,8 +36,8 @@ public class GameController {
     @PostMapping("/{gameId}/join")
     public ResponseEntity<JoinGameResponseDto> joinGame(
             @PathVariable Long gameId,
-            @RequestBody JoinGameDto joinGameDto) {
-        JoinGameResponseDto gameResponse = gameService.joinGame(gameId, joinGameDto);
+            @RequestBody String username) {
+        JoinGameResponseDto gameResponse = gameService.joinGame(gameId, username);
         return ResponseEntity.ok(gameResponse);
     }
     @GetMapping("/active")

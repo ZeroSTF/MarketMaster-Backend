@@ -30,7 +30,6 @@ public class GameDto {
         dto.setDescription(game.getDescription());
         dto.setCreationTimestamp(game.getCreationTimestamp());
         dto.setSimulationStartDate(game.getSimulationStartDate());
-        dto.setSimulationEndDate(game.getSimulationEndDate());
         dto.setStatus(game.getStatus());
         dto.setCreatorUsername(game.getCreator().getUsername());
         return dto;

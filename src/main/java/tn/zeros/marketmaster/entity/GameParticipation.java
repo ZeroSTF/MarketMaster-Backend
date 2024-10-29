@@ -26,9 +26,9 @@ public class GameParticipation implements Serializable {
     private LocalDateTime joinTimestamp;
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
-    private User user;  // New association with User entity
+    private User user;
 
-    @Column(columnDefinition = "BIGINT") // Being stored as nanoseconds at the moment
+    @Column(columnDefinition = "BIGINT")
     private Duration totalPlayTime;
     private LocalDate simulationEndDate;
     private float timeAccelerationFactor;
