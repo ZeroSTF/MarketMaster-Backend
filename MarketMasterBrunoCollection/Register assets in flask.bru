@@ -1,0 +1,19 @@
+meta {
+  name: Register assets in flask
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://localhost:5000/api/assets/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {"symbols": ["AAPL", "MSFT", "GOOGL"]}
+}

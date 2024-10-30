@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import tn.zeros.marketmaster.entity.LimitOrder;
-import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.entity.enums.OrderStatus;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
 
