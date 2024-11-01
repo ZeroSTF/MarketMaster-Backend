@@ -17,6 +17,7 @@ public class TransactionController {
     private final TransactionService transactionService;
     @PostMapping("/ajout/{username}")
     public TransactionDTO ajout(@PathVariable("username") String username, @RequestBody TransactionDTO t){
+        log.info("Received transaction for user {}: {}", username, t);
         return transactionService.addTransaction(username,t);
     }
 }

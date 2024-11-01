@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionDTO {
-    Long id;
     String symbol;
     int quantity;
     double price;
@@ -33,7 +32,6 @@ public class TransactionDTO {
     }
     public Transaction toEntity() {
         Transaction transaction = new Transaction();
-        transaction.setId(id);
         transaction.setType(this.type);
         transaction.setQuantity(this.quantity);
         transaction.setPrice(this.price);
@@ -43,7 +41,7 @@ public class TransactionDTO {
 
     public static TransactionDTO fromEntity(Transaction transaction) {
         return TransactionDTO.builder()
-                .id(transaction.getId())
+
                 .type(transaction.getType())
                 .price(transaction.getPrice())
                 .quantity(transaction.getQuantity())

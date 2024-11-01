@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.service.AuthenticationService;
+import tn.zeros.marketmaster.service.PortfolioService;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,11 +16,13 @@ import tn.zeros.marketmaster.service.AuthenticationService;
 @Slf4j
 public class AuthController {
     private final AuthenticationService authenticationService;
+    private final PortfolioService portfolioService;
 
     @PostMapping("/signup")
     public ResponseEntity<UserDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
         log.info("Attempting signup for user: {}", signupRequest);
         UserDTO signupResponse = authenticationService.signup(signupRequest);
+        portfolioService.newPortfolio(signupRequest.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(signupResponse);
     }
 

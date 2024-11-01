@@ -31,7 +31,6 @@ public class UserService {
                 .password(passwordEncoder.encode(signupRequest.getPassword()))
                 .role(Role.USER)
                 .build();
-        portfolioService.newPortfolio(user.getUsername());
         return userRepository.save(user);
     }
 
