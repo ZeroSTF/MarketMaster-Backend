@@ -1,5 +1,6 @@
 package tn.zeros.marketmaster.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -42,6 +43,7 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<GamePortfolio> gamePortfolios = new LinkedHashSet<>();
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
