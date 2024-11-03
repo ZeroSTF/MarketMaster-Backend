@@ -22,7 +22,6 @@ public class AuthController {
     public ResponseEntity<UserDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
         log.info("Attempting signup for user: {}", signupRequest);
         UserDTO signupResponse = authenticationService.signup(signupRequest);
-        portfolioService.newPortfolio(signupRequest.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(signupResponse);
     }
 
