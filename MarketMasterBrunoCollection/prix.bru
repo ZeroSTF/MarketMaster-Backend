@@ -1,0 +1,21 @@
+meta {
+  name: prix
+  type: http
+  seq: 15
+}
+
+post {
+  url: http://localhost:5000/api/predict/AAPL
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJyaWFkaCIsImlhdCI6MTczMDAyNjY4OSwiZXhwIjoxNzMwMDI2OTg5fQ.i5d7YzXOjTDsKAkoo-XM-NuoTVuGStmD4xjQnnQSKw-Ll9vxa1Dc-G8MnMUHtacbdpBzld5CRTzNRZRNF95sOuubjMDFGwoqNGN7y6zVTdOZOV0lYSPInkao0xh-NE457ytdM4cXNzEnFuen9SiWxVJ9Wnu7i_kvEnD6CimqRsMIH8fnNfk7LwdZ32STRu6BlQUwV8ygp8V-a3K-2IVzxWTc8AgVKAzWeGZ_U6QBE0QkJWO_sM-HuYNIFXybAwdVOKxHCgDNYFD8649sEDXpkEj6tPPRAfAofLv6visKZOyHvyRzFgVM3fXnTDSjr4LKjRjaoDBRJmrMrnamZ3xDyg
+}
+
+body:json {
+  {
+      "days": 7
+  }
+}
