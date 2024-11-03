@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.service.AuthenticationService;
-import tn.zeros.marketmaster.service.PortfolioService;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,7 +15,6 @@ import tn.zeros.marketmaster.service.PortfolioService;
 @Slf4j
 public class AuthController {
     private final AuthenticationService authenticationService;
-    private final PortfolioService portfolioService;
 
     @PostMapping("/signup")
     public ResponseEntity<UserDTO> signup(@Valid @RequestBody SignupRequestDTO signupRequest) {
