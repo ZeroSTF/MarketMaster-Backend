@@ -10,6 +10,7 @@ import tn.zeros.marketmaster.entity.Asset;
 import tn.zeros.marketmaster.entity.LimitOrder;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.entity.enums.OrderStatus;
+import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.AssetRepository;
 import tn.zeros.marketmaster.repository.LimitOrderRepository;
@@ -45,21 +46,30 @@ public class LimitOrderService {
     public void syncLimitOrder(){
         List<LimitOrder> limitOrders = limitOrderRepository.findAll();
         for(LimitOrder limitOrder : limitOrders){
-            if (limitOrder.getLimitPrice()>=assetService.getCurrentPrice(limitOrder.getAsset().getId())&&limitOrder.getStatus().equals(OrderStatus.PENDING)){
-                TransactionDTO transactionDTO = new TransactionDTO();
-                transactionDTO.setSymbol(limitOrder.getAsset().getSymbol());
-                transactionDTO.setQuantity(limitOrder.getQuantity());
-                transactionDTO.setType(limitOrder.getType());
-                String userName = limitOrder.getUser().getUsername();
-                limitOrder.setExecutionTimestamp(LocalDateTime.now());
-                limitOrder.setStatus(OrderStatus.EXECUTED);
-                limitOrderRepository.save(limitOrder);
-                transactionService.addTransaction(userName, transactionDTO);
+            if (limitOrder.getStatus().equals(OrderStatus.PENDING)){
+                if (limitOrder.getType().equals(TransactionType.BUY)){
+                    if (limitOrder.getLimitPrice()<=assetService.getCurrentPrice(limitOrder.getAsset().getId())){
+                        affectLimitOrder(limitOrder);
+                    }
+                }else if (limitOrder.getLimitPrice()>=assetService.getCurrentPrice(limitOrder.getAsset().getId())){
+                    affectLimitOrder(limitOrder);
+                }
             } else if (limitOrder.getStatus().equals(OrderStatus.CANCELLED)) {
                 limitOrderRepository.delete(limitOrder);
             }
 
         }
 
+    }
+    public void affectLimitOrder(LimitOrder limitOrder) {
+        TransactionDTO transactionDTO = new TransactionDTO();
+        transactionDTO.setSymbol(limitOrder.getAsset().getSymbol());
+        transactionDTO.setQuantity(limitOrder.getQuantity());
+        transactionDTO.setType(limitOrder.getType());
+        String userName = limitOrder.getUser().getUsername();
+        limitOrder.setExecutionTimestamp(LocalDateTime.now());
+        limitOrder.setStatus(OrderStatus.EXECUTED);
+        limitOrderRepository.save(limitOrder);
+        transactionService.addTransaction(userName, transactionDTO);
     }
 }
