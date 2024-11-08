@@ -5,17 +5,18 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import tn.zeros.marketmaster.dto.OverviewDTO;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
+import tn.zeros.marketmaster.dto.TransactionDTO;
+import tn.zeros.marketmaster.dto.WatchListDTO;
 import tn.zeros.marketmaster.entity.*;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
-import tn.zeros.marketmaster.repository.HoldingRepository;
-import tn.zeros.marketmaster.repository.PortfolioRepository;
-import tn.zeros.marketmaster.repository.UserRepository;
+import tn.zeros.marketmaster.repository.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-
+import java.math.RoundingMode;
 @Service
 @AllArgsConstructor
 public class PortfolioService {
@@ -23,9 +24,16 @@ public class PortfolioService {
     private final UserRepository userRepository;
     private final AssetService assetService;
     private final HoldingRepository holdingRepository;
+    private final AssetRepository  assetRepository;
+    private final UserWatchlistRepository userWatchlistRepository;
 
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
+    private double roundToTwoDecimalPlaces(double value) {
+        return BigDecimal.valueOf(value)
+                .setScale(2, RoundingMode.HALF_UP) // Rounding mode can be adjusted as needed
+                .doubleValue();
+    }
     private LocalDateTime getStartOfDay() {
         return LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
     }
@@ -102,15 +110,17 @@ public class PortfolioService {
 
         OverviewDTO overview = new OverviewDTO();
 
-        overview.setAnnualReturn(calculateReturn(username, 1));
-        overview.setCash(portfolio.getCash());
 
-        double totalValueToday = portfolio.getTotalValue().get(getStartOfDay());
-        double totalValueYesterday = portfolio.getTotalValue().get(getStartOfYesterday());
+        overview.setAnnualReturn(roundToTwoDecimalPlaces(calculateReturn(username, 1)));
+        overview.setCash(roundToTwoDecimalPlaces(portfolio.getCash()));
+        overview.setHoldingNumber(holdingRepository.countByPortfolioId(portfolio.getId()));
+        double totalValueToday = portfolio.getTotalValue().getOrDefault(getStartOfDay(), 0.0);
+        double totalValueYesterday = portfolio.getTotalValue().getOrDefault(getStartOfYesterday(), 0.0);
+        overview.setTotalValue(roundToTwoDecimalPlaces(totalValueToday - totalValueYesterday));
+        double cashYesterday = calculateCashYesterday(username);
+        overview.setCashPercentage(roundToTwoDecimalPlaces((portfolio.getCash() - cashYesterday) * 100 / cashYesterday));
+        overview.setTotalValuePercentage(roundToTwoDecimalPlaces((totalValueToday - totalValueYesterday) * 100 / totalValueToday));
 
-        overview.setTotalValue(totalValueToday);
-        overview.setCashPercentage((portfolio.getCash() - calculateCashYesterday(username)) * 100 / calculateCashYesterday(username));
-        overview.setTotalValuePercentage((totalValueToday - totalValueYesterday) * 100 / totalValueToday);
         overview.setDailyChange(getDailyChange(username));
 
         return overview;
@@ -188,6 +198,45 @@ public class PortfolioService {
         totalValueList.add(portfolio.getTotalValue());
 
         return totalValueList;
+    }
+
+    public List<TransactionDTO> getAllTransactions(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found "));
+
+        Portfolio portfolio = user.getPortfolio();
+        if (portfolio == null) {
+            throw new PortfolioNotFoundException("Portfolio not found for user: " + username);
+        }
+        Set<Transaction> transactions = portfolio.getTransactions();
+        return transactions.stream()
+                .map(TransactionDTO::fromEntity)
+                .toList();
+    }
+
+    public WatchListDTO addWatchList(String username,String symbol) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
+        UserWatchlist userWatchlist=new UserWatchlist();
+        userWatchlist.setUser(user);
+        Asset asset= assetRepository.findBySymbol(symbol);
+        userWatchlist.setAsset(asset);
+        userWatchlistRepository.save(userWatchlist);
+        return WatchListDTO.fromEntity(userWatchlist);
+    }
+    public List<WatchListDTO> getAllWatchList(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
+        List<UserWatchlist> userWatchlists =userWatchlistRepository.findByUser_Id(user.getId());
+        List<WatchListDTO> watchListDTOs = new ArrayList<>();
+        for (UserWatchlist userWatchlist : userWatchlists) {
+            WatchListDTO watchListDTO = new WatchListDTO();
+            watchListDTO.setId(userWatchlist.getId());
+            watchListDTO.setUserId(userWatchlist.getUser().getId());
+            watchListDTO.setAssetSymbol(userWatchlist.getAsset().getSymbol());
+            watchListDTOs.add(watchListDTO);
+        }
+        return watchListDTOs;
     }
 }
 

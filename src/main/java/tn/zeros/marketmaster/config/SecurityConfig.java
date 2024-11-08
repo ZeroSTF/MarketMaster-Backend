@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/asset/**").permitAll()
                         .requestMatchers("/tran/**").permitAll()
                         .requestMatchers("/order/**").permitAll()
+                        .requestMatchers("/portf/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
