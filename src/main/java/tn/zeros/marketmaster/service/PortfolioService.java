@@ -1,14 +1,18 @@
 package tn.zeros.marketmaster.service;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import tn.zeros.marketmaster.dto.OverviewDTO;
 import tn.zeros.marketmaster.dto.PortfolioDTO;
 import tn.zeros.marketmaster.dto.TransactionDTO;
 import tn.zeros.marketmaster.dto.WatchListDTO;
 import tn.zeros.marketmaster.entity.*;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
+import tn.zeros.marketmaster.exception.AssetAlreadyInWatchlistException;
+import tn.zeros.marketmaster.exception.AssetNotFoundException;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.*;
@@ -17,6 +21,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.math.RoundingMode;
+import java.util.stream.Collectors;
+
 @Service
 @AllArgsConstructor
 public class PortfolioService {
@@ -53,13 +59,14 @@ public class PortfolioService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         double priceNow = calculatePortfolioHolding(user.getUsername());
-        return dailyChange.subtract(BigDecimal.valueOf(priceNow));
+        return BigDecimal.valueOf(priceNow).subtract(dailyChange);
     }
 
     public double calculateReturn(String username, int year) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
         Portfolio portfolio = user.getPortfolio();
+
 
         if (portfolio == null || portfolio.getTotalValue().isEmpty()) {
             return 0.0;
@@ -69,10 +76,11 @@ public class PortfolioService {
         LocalDateTime startDate = now.withHour(0).minusYears(year);
         Map<LocalDateTime, Double> totalValue = portfolio.getTotalValue();
 
+
         Map.Entry<LocalDateTime, Double> startEntry = totalValue.entrySet().stream()
                 .filter(entry -> !entry.getKey().isAfter(startDate))
                 .min(Map.Entry.comparingByKey())
-                .orElse(null);
+                .orElse(totalValue.entrySet().stream().min(Map.Entry.comparingByKey()).orElse(null));
 
         Map.Entry<LocalDateTime, Double> endEntry = totalValue.entrySet().stream()
                 .max(Map.Entry.comparingByKey())
@@ -81,7 +89,6 @@ public class PortfolioService {
         if (startEntry == null || endEntry == null) {
             return 0.0;
         }
-
         return endEntry.getValue() - startEntry.getValue();
     }
 
@@ -116,7 +123,7 @@ public class PortfolioService {
         overview.setHoldingNumber(holdingRepository.countByPortfolioId(portfolio.getId()));
         double totalValueToday = portfolio.getTotalValue().getOrDefault(getStartOfDay(), 0.0);
         double totalValueYesterday = portfolio.getTotalValue().getOrDefault(getStartOfYesterday(), 0.0);
-        overview.setTotalValue(roundToTwoDecimalPlaces(totalValueToday - totalValueYesterday));
+        overview.setTotalValue(roundToTwoDecimalPlaces(totalValueToday ));
         double cashYesterday = calculateCashYesterday(username);
         overview.setCashPercentage(roundToTwoDecimalPlaces((portfolio.getCash() - cashYesterday) * 100 / cashYesterday));
         overview.setTotalValuePercentage(roundToTwoDecimalPlaces((totalValueToday - totalValueYesterday) * 100 / totalValueToday));
@@ -176,12 +183,13 @@ public class PortfolioService {
     }
 
     @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
     public void updateTotalValue() {
         List<User> users = userRepository.findAll();
         for (User user : users) {
             Portfolio portfolio = user.getPortfolio();
-            double value = portfolio.getCash() + calculateInvestment(user.getUsername());
-            portfolio.getTotalValue().put(LocalDateTime.now(), value);
+            double value = portfolio.getCash() + calculatePortfolioHolding(user.getUsername());
+            portfolio.getTotalValue().put(getStartOfDay(), value);
         }
     }
 
@@ -217,13 +225,25 @@ public class PortfolioService {
     public WatchListDTO addWatchList(String username,String symbol) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
-        UserWatchlist userWatchlist=new UserWatchlist();
+
+        Asset asset = assetRepository.findBySymbol(symbol);
+        if (asset == null) {
+            throw new AssetNotFoundException("Asset not found with symbol: " + symbol);
+        }
+
+
+        if (userWatchlistRepository.existsByAsset(asset)) {
+            throw new AssetAlreadyInWatchlistException("This asset is already in the watchlist.");
+        }
+
+        UserWatchlist userWatchlist = new UserWatchlist();
         userWatchlist.setUser(user);
-        Asset asset= assetRepository.findBySymbol(symbol);
         userWatchlist.setAsset(asset);
         userWatchlistRepository.save(userWatchlist);
+
         return WatchListDTO.fromEntity(userWatchlist);
     }
+
     public List<WatchListDTO> getAllWatchList(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
@@ -238,5 +258,14 @@ public class PortfolioService {
         }
         return watchListDTOs;
     }
+
+    public List<Map.Entry<LocalDateTime, Double>> getTotalValues(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
+
+        Portfolio portfolio = user.getPortfolio();
+        return new ArrayList<>(portfolio.getTotalValue().entrySet());
+    }
+
 }
 

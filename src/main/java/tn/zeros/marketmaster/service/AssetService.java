@@ -77,6 +77,6 @@ public class AssetService {
     }
 
     public double getCurrentPrice(Long assetId) {
-        return 80; //TODO
+        return 450; //TODO
     }
 }

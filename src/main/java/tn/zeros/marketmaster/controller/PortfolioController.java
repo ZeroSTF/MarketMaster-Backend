@@ -59,4 +59,9 @@ public class PortfolioController {
         List<WatchListDTO> watchListDTOS = portfolioService.getAllWatchList(username);
         return ResponseEntity.ok(watchListDTOS);
     }
+
+    @GetMapping("/totalValues/{username}")
+    public List<Map.Entry<LocalDateTime, Double>> getTotalValues(@PathVariable String username) {
+        return portfolioService.getTotalValues(username);
+    }
 }
