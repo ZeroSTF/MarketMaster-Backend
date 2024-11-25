@@ -41,4 +41,7 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
         return UserDTO.fromEntity(user);
     }
+    public User getUserByUseranme(String username){
+        return userRepository.findByUsername(username).orElse(null);
+    }
 }

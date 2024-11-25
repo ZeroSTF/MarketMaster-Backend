@@ -64,7 +64,7 @@ public class AssetService {
         }
     }
 
-    private Mono<Void> registerAssetsWithFlask(List<String> symbols) {
+    public Mono<Void> registerAssetsWithFlask(List<String> symbols) {
         return webClient.post()
                 .uri("/api/assets/register")
                 .bodyValue(new RegisterAssetsRequest(symbols))
