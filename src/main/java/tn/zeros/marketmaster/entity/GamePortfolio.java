@@ -33,7 +33,7 @@ public class GamePortfolio implements Serializable {
     @OneToMany(mappedBy = "gamePortfolio", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<GameTransaction> gameTransactions = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "gamePortfolio", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "gamePortfolio", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private Set<GameHolding> gameHoldings = new LinkedHashSet<>();
 
 }

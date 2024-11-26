@@ -18,4 +18,6 @@ public interface GameParticipationRepository extends JpaRepository<GameParticipa
     List<GameParticipation> findByUserUsername(String username);
     @Query("SELECT gp.game FROM GameParticipation gp WHERE gp.user = :user")
     List<Game> findGamesByUser(@Param("user") User user);
+
+    List<GameParticipation> findByGame(Game game);
 }
