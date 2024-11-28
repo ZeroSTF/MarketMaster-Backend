@@ -41,8 +41,11 @@ public class GameService {
     private final MarketDataRepository marketDataRepository ;
     private final RestTemplate restTemplate;
     private final PortfolioRepository portfolioRepository;
+    private final NewsArticleRepository newsArticleRepository ;
 
-    private static final String FLASK_API_URL = "http://localhost:5000/api/assets/history";
+    private static final String FLASK_API_URL_HISTORY = "http://localhost:5000/api/assets/history";
+    private static final String FLASK_API_URL_NEWS = "http://localhost:5000/api/assets/news";
+
     private static final Logger logger = LoggerFactory.getLogger(GameService.class);  // Initialize the logger
 
 
@@ -65,7 +68,7 @@ public class GameService {
 
         // Generate a random simulation date range
         LocalDate simulationStartDate = getRandomDateWithinLast20Years();
-        LocalDate simulationEndDate = simulationStartDate.plusDays(1);
+        LocalDate simulationEndDate = simulationStartDate.plusDays(10);
 
         // Create the game entity and set its initial properties
         Game game = gameDto.toEntity();
@@ -77,8 +80,9 @@ public class GameService {
         // Save the game to get its ID
         Game createdGame = gameRepository.save(game);
 
-        // Fetch market data for the specified date range
+        // Fetch market data and news articles for the specified date range
         List<MarketData> marketDataList = fetchMarketDataFromFlask(simulationStartDate, simulationEndDate);
+        List<NewsArticle> newsArticles = fetchNewsFromFlask(simulationStartDate, simulationEndDate);
 
         // Set the associated game for each MarketData entry
         for (MarketData marketData : marketDataList) {
@@ -92,7 +96,17 @@ public class GameService {
             System.out.println("No market data fetched to save.");
         }
 
-        // Create and save portfolio and participation entities for the user
+        // Set the associated game for each NewsArticle entry
+        for (NewsArticle newsArticle : newsArticles) {
+            newsArticle.setGame(createdGame);
+        }
+
+        if (!newsArticles.isEmpty()) {
+            newsArticleRepository.saveAll(newsArticles);
+        } else {
+            System.out.println("No news articles fetched to save.");
+        }
+
         GamePortfolio portfolio = new GamePortfolio();
         portfolio.setGame(createdGame);
         portfolio.setUser(creator);
@@ -113,6 +127,7 @@ public class GameService {
 
 
 
+
     private List<MarketData> fetchMarketDataFromFlask(LocalDate startDate, LocalDate endDate) {
         String start = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
         String end = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -123,7 +138,7 @@ public class GameService {
                 .collect(Collectors.toList());
 
         // Build URI with symbols as query parameters
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(FLASK_API_URL)
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(FLASK_API_URL_HISTORY)
                 .queryParam("start", start)
                 .queryParam("end", end);
 
@@ -170,6 +185,66 @@ public class GameService {
             throw new RuntimeException("Failed to fetch market data from Flask API", e);
         }
     }
+
+    private List<NewsArticle> fetchNewsFromFlask(LocalDate startDate, LocalDate endDate) {
+        String start = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        String end = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+        // Fetch asset symbols
+        List<String> symbols = assetRepository.findAll().stream()
+                .map(Asset::getSymbol)
+                .collect(Collectors.toList());
+
+        // Build URI with symbols as query parameters
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(FLASK_API_URL_NEWS)
+                .queryParam("start", start)
+                .queryParam("end", end);
+
+        for (String symbol : symbols) {
+            uriBuilder.queryParam("symbols", symbol);
+        }
+
+        try {
+            // Fetch data from Flask API
+            ResponseEntity<Map<String, List<NewsArticleDto>>> response = restTemplate.exchange(
+                    uriBuilder.toUriString(),
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<Map<String, List<NewsArticleDto>>>() {}
+            );
+
+            Map<String, List<NewsArticleDto>> dataMap = response.getBody();
+            if (dataMap == null) {
+                return List.of();
+            }
+
+            List<NewsArticle> newsArticles = new ArrayList<>();
+            for (Map.Entry<String, List<NewsArticleDto>> entry : dataMap.entrySet()) {
+                String symbol = entry.getKey();
+                Asset asset = assetRepository.findBySymbol(symbol);
+
+                for (NewsArticleDto dto : entry.getValue()) {
+                    NewsArticle newsArticle = new NewsArticle();
+                    newsArticle.setCategory(dto.getCategory());
+                    newsArticle.setHeadline(dto.getHeadline());
+                    newsArticle.setSource(dto.getSource());
+                    newsArticle.setRelated(dto.getRelated());
+                    newsArticle.setUrl(dto.getUrl());
+                    newsArticle.setImage(dto.getImage());
+                    newsArticle.setPublishedDate(dto.getPublishedDate());
+                    newsArticles.add(newsArticle);
+                }
+            }
+
+            return newsArticles;
+
+        } catch (Exception e) {
+            logger.error("Failed to fetch news articles from Flask API", e);
+            throw new RuntimeException("Failed to fetch news articles from Flask API", e);
+        }
+    }
+
+
 
 
 

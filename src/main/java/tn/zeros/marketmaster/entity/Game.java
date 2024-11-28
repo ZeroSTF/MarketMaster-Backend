@@ -44,4 +44,7 @@ public class Game implements Serializable {
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MarketData> marketDataList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NewsArticle> NewsArticleList = new ArrayList<>();
+
 }
