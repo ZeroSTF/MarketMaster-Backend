@@ -35,7 +35,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public UserDTO getCurrentUser(String username) {
+    public UserDTO getUser(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
         return UserDTO.fromEntity(user);
