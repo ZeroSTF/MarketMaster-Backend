@@ -5,10 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import tn.zeros.marketmaster.dto.OverviewDTO;
-import tn.zeros.marketmaster.dto.PortfolioDTO;
-import tn.zeros.marketmaster.dto.TransactionDTO;
-import tn.zeros.marketmaster.dto.WatchListDTO;
+import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.entity.*;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.AssetAlreadyInWatchlistException;
@@ -249,11 +246,12 @@ public class PortfolioService {
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MSG));
         List<UserWatchlist> userWatchlists =userWatchlistRepository.findByUser_Id(user.getId());
         List<WatchListDTO> watchListDTOs = new ArrayList<>();
+
         for (UserWatchlist userWatchlist : userWatchlists) {
             WatchListDTO watchListDTO = new WatchListDTO();
             watchListDTO.setId(userWatchlist.getId());
             watchListDTO.setUserId(userWatchlist.getUser().getId());
-            watchListDTO.setAssetSymbol(userWatchlist.getAsset().getSymbol());
+            watchListDTO.setAsset(AssetDTO.fromEntity(userWatchlist.getAsset()));
             watchListDTOs.add(watchListDTO);
         }
         return watchListDTOs;
@@ -266,6 +264,23 @@ public class PortfolioService {
         Portfolio portfolio = user.getPortfolio();
         return new ArrayList<>(portfolio.getTotalValue().entrySet());
     }
+
+    public List<BestWinnerDTO> getBestWinners() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    double gain = calculateReturn(user.getUsername(), 1);
+                    return new BestWinnerDTO(
+                            user.getFirstName(),
+                            user.getLastName(),
+                            user.getUsername(),
+                            gain
+                    );
+                })
+                .sorted(Comparator.comparingDouble(BestWinnerDTO::getPrice).reversed())
+                .limit(5)
+                .collect(Collectors.toList());
+    }
+
 
 }
 

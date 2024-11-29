@@ -8,6 +8,7 @@ import tn.zeros.marketmaster.dto.LimitOrderDTO;
 import tn.zeros.marketmaster.dto.TransactionDTO;
 import tn.zeros.marketmaster.entity.Asset;
 import tn.zeros.marketmaster.entity.LimitOrder;
+import tn.zeros.marketmaster.entity.Portfolio;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.entity.enums.OrderStatus;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
@@ -17,7 +18,10 @@ import tn.zeros.marketmaster.repository.LimitOrderRepository;
 import tn.zeros.marketmaster.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Service
 @AllArgsConstructor
@@ -41,35 +45,56 @@ public class LimitOrderService {
         return limitOrderDTO;
     }
 
-    @Scheduled(fixedRate = 2000)
-    @Transactional
-    public void syncLimitOrder(){
-        List<LimitOrder> limitOrders = limitOrderRepository.findAll();
-        for(LimitOrder limitOrder : limitOrders){
-            if (limitOrder.getStatus().equals(OrderStatus.PENDING)){
-                if (limitOrder.getType().equals(TransactionType.BUY)){
-                    if (limitOrder.getLimitPrice()<=assetService.getCurrentPrice(limitOrder.getAsset().getId())){
-                        affectLimitOrder(limitOrder);
-                    }
-                }else if (limitOrder.getLimitPrice()>=assetService.getCurrentPrice(limitOrder.getAsset().getId())){
-                    affectLimitOrder(limitOrder);
-                }
-            } else if (limitOrder.getStatus().equals(OrderStatus.CANCELLED)) {
-                limitOrderRepository.delete(limitOrder);
-            }
 
-        }
-
-    }
     public void affectLimitOrder(LimitOrder limitOrder) {
         TransactionDTO transactionDTO = new TransactionDTO();
         transactionDTO.setSymbol(limitOrder.getAsset().getSymbol());
         transactionDTO.setQuantity(limitOrder.getQuantity());
         transactionDTO.setType(limitOrder.getType());
+        transactionDTO.setPrice(assetService.getCurrentPrice(limitOrder.getAsset().getId()));
         String userName = limitOrder.getUser().getUsername();
         limitOrder.setExecutionTimestamp(LocalDateTime.now());
         limitOrder.setStatus(OrderStatus.EXECUTED);
         limitOrderRepository.save(limitOrder);
         transactionService.addTransaction(userName, transactionDTO);
+    }
+
+    public List<LimitOrderDTO> getAllLimitOrders(String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User with username: " + username + " not found."));
+
+        List<LimitOrder> limitOrders = limitOrderRepository.findByUserId(user.getId());
+
+        return limitOrders.stream()
+                .map(LimitOrderDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+    @Scheduled(fixedRate = 2000)
+    @Transactional
+    public void syncLimitOrder(){
+        List<LimitOrder> limitOrders = limitOrderRepository.findAll();
+
+        for (LimitOrder limitOrder : limitOrders) {
+
+            if (limitOrder.getStatus().equals(OrderStatus.PENDING)) {
+
+
+                if (limitOrder.getType().equals(TransactionType.BUY)) {
+                    if (limitOrder.getLimitPrice() >= assetService.getCurrentPrice(limitOrder.getAsset().getId())) {
+                        affectLimitOrder(limitOrder);
+                    }
+                }
+                else if (limitOrder.getType().equals(TransactionType.SELL)) {
+                    if (limitOrder.getLimitPrice() <= assetService.getCurrentPrice(limitOrder.getAsset().getId())) {
+                        affectLimitOrder(limitOrder);
+                    }
+                }
+            }
+            else if (limitOrder.getStatus().equals(OrderStatus.CANCELLED)) {
+                limitOrderRepository.delete(limitOrder);
+            }
+        }
+
     }
 }

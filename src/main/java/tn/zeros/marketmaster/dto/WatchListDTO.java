@@ -13,14 +13,15 @@ import tn.zeros.marketmaster.entity.UserWatchlist;
 @AllArgsConstructor
 public class WatchListDTO {
     private Long id;
-    private String assetSymbol;
+    private AssetDTO asset;
     private Long userId;
 
     public static WatchListDTO fromEntity(UserWatchlist userWatchlist) {
         return WatchListDTO.builder()
                 .id(userWatchlist.getId())
-                .assetSymbol(userWatchlist.getAsset().getSymbol())
+                .asset(AssetDTO.fromEntity(userWatchlist.getAsset())) // Map full AssetDTO
                 .userId(userWatchlist.getUser().getId())
                 .build();
     }
 }
+

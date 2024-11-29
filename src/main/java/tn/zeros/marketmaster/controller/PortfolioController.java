@@ -3,11 +3,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.zeros.marketmaster.dto.HoldingDTO;
-import tn.zeros.marketmaster.dto.OverviewDTO;
-import tn.zeros.marketmaster.dto.TransactionDTO;
-import tn.zeros.marketmaster.dto.WatchListDTO;
+import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.service.HoldingService;
+import tn.zeros.marketmaster.service.LimitOrderService;
 import tn.zeros.marketmaster.service.PortfolioService;
 
 
@@ -22,6 +20,7 @@ import java.util.Map;
 public class PortfolioController {
     private final PortfolioService portfolioService;
     private final HoldingService holdingService;
+    private final LimitOrderService limitOrderService;
 
 
     @GetMapping("/overview/{username}")
@@ -63,5 +62,15 @@ public class PortfolioController {
     @GetMapping("/totalValues/{username}")
     public List<Map.Entry<LocalDateTime, Double>> getTotalValues(@PathVariable String username) {
         return portfolioService.getTotalValues(username);
+    }
+
+    @GetMapping("/bestWinner")
+    public List<BestWinnerDTO> getBestWinners(){
+        return portfolioService.getBestWinners();
+    }
+
+    @GetMapping("/LimitOrder/{username}")
+    public List<LimitOrderDTO> getLimitOrders(@PathVariable String username){
+        return limitOrderService.getAllLimitOrders(username);
     }
 }

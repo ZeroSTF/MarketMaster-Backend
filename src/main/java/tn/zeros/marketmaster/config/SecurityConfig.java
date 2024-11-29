@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/tran/**").permitAll()
                         .requestMatchers("/order/**").permitAll()
                         .requestMatchers("/portf/**").permitAll()
+                        .requestMatchers("/watchlist/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
