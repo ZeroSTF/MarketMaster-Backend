@@ -20,7 +20,7 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getCurrentUser(@AuthenticationPrincipal String username) {
         log.info("Fetching current user data for: {}", username);
-        UserDTO userDTO = userService.getCurrentUser(username);
+        UserDTO userDTO = userService.getUser(username);
         return ResponseEntity.ok(userDTO);
     }
 }
