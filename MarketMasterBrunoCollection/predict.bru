@@ -1,0 +1,22 @@
+meta {
+  name: predict
+  type: http
+  seq: 20
+}
+
+post {
+  url: http://localhost:8081/api/asset/predict
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ6ZXJvc3RmIiwiaWF0IjoxNzMyODAyMDM3LCJleHAiOjE3MzI4MDIzMzd9.as3oIIX7wCnzRBpZT0NBHSb1pVHSut4hiU_M5j0uuRfFufF56EqBEkFt-vAQ3R8_usc10fNgtSaEaIktGuA1fPYSHwjWhLIAGE4g8yQmgsBM_UEulx78_CVj5KzTVPQUinbQNvYeWUsHdmliekeDNAZ9_odwAkhJ355xvG9Mn0c71PNJ4D7qya7ymkv4dIDKZUGfS3SOd99i98MlW-gS2BNAge7106fskpaMgO-j3f7dDjP31SqXs32a3I-g4DCK5MswYNIgkB8j_-DmllG-qQc-qEW5n3zDycEFl3HA0VGpiPurm4DBCXSw1GpYs4ioB8fkhOuubiiggpSuJeokXw
+}
+
+body:json {
+  {
+    "symbol": "AAPL",
+    "train": true
+  }
+}

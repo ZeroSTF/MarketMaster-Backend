@@ -18,4 +18,5 @@ public class OverviewDTO {
     private double cash;
     private double cashPercentage;
     private double annualReturn;
+    private int holdingNumber;
 }

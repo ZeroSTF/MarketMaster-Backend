@@ -17,7 +17,7 @@ public class UserWatchlist implements Serializable {
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "asset_id")
+    @JoinColumn(name = "asset_id",unique = true)
     private Asset asset;
 
     @ManyToOne(cascade = CascadeType.ALL)

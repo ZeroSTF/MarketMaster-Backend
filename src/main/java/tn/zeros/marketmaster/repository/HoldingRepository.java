@@ -12,8 +12,8 @@ import java.util.Set;
 
 public interface HoldingRepository extends JpaRepository<Holding,Long> {
 
-    @Query("SELECT count(*) from Holding h where h.portfolio.id=:user")
-    public int countHoldingByUserId(@Param("user") Long id);
+    @Query("SELECT count(*) from Holding h where h.portfolio.id=:id")
+    public int countByPortfolioId(@Param("id") Long id);
 
     public Set<Holding> findAllByPortfolio(Portfolio p);
 }
