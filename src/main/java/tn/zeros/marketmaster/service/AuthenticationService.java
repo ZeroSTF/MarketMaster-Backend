@@ -18,7 +18,7 @@ import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.CustomAuthenticationException;
 import tn.zeros.marketmaster.exception.TokenValidationException;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +46,7 @@ public class AuthenticationService {
             String refreshToken = jwtTokenService.generateRefreshToken(userDetails);
 
             tokenStorageService.storeRefreshToken(userDetails.getUsername(), refreshToken);
-            String issuedAt = ZonedDateTime.now().toString();
+            String issuedAt = LocalDateTime.now().toString();
 
             return new TokenResponseDTO(accessToken, refreshToken, jwtExpiration, issuedAt);
         } catch (BadCredentialsException e) {
@@ -62,7 +62,7 @@ public class AuthenticationService {
 
         UserDetails userDetails = loadUserByUsername(username);
         String newAccessToken = jwtTokenService.generateToken(userDetails);
-        String issuedAt = ZonedDateTime.now().toString();
+        String issuedAt = LocalDateTime.now().toString();
 
         return new TokenResponseDTO(newAccessToken, refreshToken, refreshExpiration, issuedAt);
     }
