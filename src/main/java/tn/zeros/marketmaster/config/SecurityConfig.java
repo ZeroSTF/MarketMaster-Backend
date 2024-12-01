@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/ws-market-data/**").permitAll() // Allow WebSocket connections
+                        .requestMatchers("/ws-market-data/**").permitAll()
                         .requestMatchers("/asset/**").permitAll()
                         .anyRequest().authenticated()
                 )
