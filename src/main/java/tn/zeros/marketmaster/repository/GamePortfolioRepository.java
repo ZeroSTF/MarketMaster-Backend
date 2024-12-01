@@ -1,6 +1,8 @@
 package tn.zeros.marketmaster.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import tn.zeros.marketmaster.entity.Game;
 import tn.zeros.marketmaster.entity.GamePortfolio;
 import tn.zeros.marketmaster.entity.User;
@@ -16,7 +18,11 @@ public interface GamePortfolioRepository extends JpaRepository<GamePortfolio,Lon
 
     List<GamePortfolio> findByUserUsername(String username);
 
-    Optional<GamePortfolio> findByUserAndGame(User user, Game game);
+    @Query("SELECT gp FROM GamePortfolio gp WHERE gp.user = :user AND gp.game = :game")
+    Optional<GamePortfolio> findByUserAndGame(@Param("user") User user, @Param("game") Game game);
+
+    @Query("SELECT gp FROM GamePortfolio gp WHERE gp.user = :user AND gp.game = :game")
+    List<GamePortfolio> findAllByUserAndGame(@Param("user") User user, @Param("game") Game game);
 
     Optional<GamePortfolio> findByUserUsernameAndGameId(String username, Long gameId);
 

@@ -3,10 +3,12 @@ package tn.zeros.marketmaster.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,7 +31,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GameService {
@@ -399,40 +401,78 @@ public class GameService {
 
     @Transactional
     public PlayerPerformanceDto getPlayerPerformance(String username) {
-        List<GameParticipation> participations = gameParticipationRepository.findByUserUsername(username);
+
+        List<GameParticipation> participations;
+        try {
+            participations = gameParticipationRepository.findByUserUsername(username);
+        } catch (IncorrectResultSizeDataAccessException e) {
+            throw e; // Re-throw after logging
+        }
 
         int gamesPlayed = participations.size();
+
         int gamesWon = calculateGamesWon(participations);
+
         BigDecimal totalProfit = calculateTotalProfit(username);
-        BigDecimal averageProfit = gamesPlayed > 0 ? totalProfit.divide(BigDecimal.valueOf(gamesPlayed*10000), RoundingMode.HALF_UP) : BigDecimal.ZERO;
+
+        BigDecimal averageProfit = gamesPlayed > 0
+                ? totalProfit.divide(BigDecimal.valueOf(gamesPlayed * 10000), RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
         double winRate = gamesPlayed > 0 ? (double) gamesWon / gamesPlayed * 100 : 0;
 
         return new PlayerPerformanceDto(username, gamesPlayed, gamesWon, winRate, totalProfit, averageProfit);
     }
 
     private BigDecimal calculateTotalProfit(String username) {
-        List<GamePortfolio> portfolios = gamePortfolioRepository.findByUserUsername(username);
-        return portfolios.stream()
+        log.info("Calculating total profit for username: {}", username);
+
+        List<GamePortfolio> portfolios;
+        try {
+            portfolios = gamePortfolioRepository.findByUserUsername(username);
+        } catch (IncorrectResultSizeDataAccessException e) {
+            throw e;
+        }
+
+        BigDecimal totalProfit = portfolios.stream()
                 .map(this::calculateProfit)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return totalProfit;
     }
 
-
-
     private int calculateGamesWon(List<GameParticipation> participations) {
-        return (int) participations.stream()
-                .filter(participation -> participation.getGame().getStatus() == GameStatus.COMPLETED)
-                .filter(participation -> didPlayerWin(participation))
+
+        int gamesWon = (int) participations.stream()
+                .filter(participation -> {
+                    boolean isCompleted = participation.getGame().getStatus() == GameStatus.COMPLETED;
+                    log.debug("Game status for participation {}: {}", participation.getId(), isCompleted ? "COMPLETED" : "NOT COMPLETED");
+                    return isCompleted;
+                })
+                .filter(this::didPlayerWin)
                 .count();
+
+        log.info("Total games won: {}", gamesWon);
+        return gamesWon;
     }
 
     private boolean didPlayerWin(GameParticipation participation) {
-        GamePortfolio portfolio = gamePortfolioRepository.findByUserAndGame(participation.getUser(), participation.getGame())
+
+        List<GamePortfolio> portfolios = gamePortfolioRepository.findAllByUserAndGame(participation.getUser(), participation.getGame());
+
+        if (portfolios.size() > 1) {
+            throw new IncorrectResultSizeDataAccessException("Multiple portfolios found", 1);
+        }
+
+        GamePortfolio portfolio = portfolios.stream().findFirst()
                 .orElseThrow(() -> new EntityNotFoundException("Portfolio not found"));
 
         BigDecimal profit = calculateProfit(portfolio);
+
+
         return profit.compareTo(BigDecimal.ZERO) > 0;
     }
+
 
 
 
