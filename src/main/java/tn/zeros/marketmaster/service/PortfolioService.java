@@ -189,8 +189,6 @@ public class PortfolioService {
 
         return totalValueList;
     }
-    public Portfolio getById(Long id){
-        return portfolioRepository.getById(id);
-    }
+
 }
 
