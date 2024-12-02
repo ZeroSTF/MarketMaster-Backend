@@ -68,7 +68,7 @@ public class TransactionService {
     private void processBuyTransaction(Portfolio portfolio, TransactionDTO transactionDTO) {
         Asset asset1 = assetRepository.findBySymbol(transactionDTO.getSymbol());
 
-        double totalCost = transactionDTO.getQuantity() * transactionDTO.getPrice();
+        double totalCost = transactionDTO.getQuantity() * assetService.getCurrentPrice(asset1.getId());
         if (portfolio.getCash() < totalCost) {
             throw new InsufficientFundsException("Not enough cash for this transaction");
         }
@@ -77,7 +77,7 @@ public class TransactionService {
         Asset asset = assetRepository.findBySymbol(transactionDTO.getSymbol());
         Holding holding = findOrCreateHolding(portfolio, asset);
         Transaction transaction = transactionDTO.toEntity();
-        transaction.setPrice(totalCost);
+        transaction.setPrice(assetService.getCurrentPrice(asset1.getId()));
         transaction.setPortfolio(portfolio);
         transaction.setAsset(asset);
         portfolio.getTransactions().add(transaction);
