@@ -14,8 +14,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private String frontendOrigin;
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
+        registry.enableSimpleBroker("/topic", "/queue"); // Add /queue for user-specific messaging
         registry.setApplicationDestinationPrefixes("/app");
+        registry.setUserDestinationPrefix("/user"); // Prefix for user-specific destinations
     }
 
     @Override
