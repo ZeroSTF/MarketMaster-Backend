@@ -29,7 +29,6 @@ public class AssetDTO {
                 .id(asset.getId())
                 .symbol(asset.getSymbol())
                 .name(asset.getName())
-                .type(asset.getType())
                 .build();
     }
 }

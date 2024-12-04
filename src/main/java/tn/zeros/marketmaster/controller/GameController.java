@@ -32,11 +32,19 @@ public class GameController {
 
         return ResponseEntity.ok(createdGame);
     }
+    @PostMapping("/create/event")
+    public ResponseEntity<?> createEvent(@RequestBody NewEventDto game) {
 
-    @PostMapping("/{gameId}/join")
+        NewGameResponseDto createdGame = gameService.createGameWithSpecifiedDate(game);
+
+        return ResponseEntity.ok(createdGame);
+    }
+
+    @PostMapping("/{gameId}/join/{username}")
     public ResponseEntity<JoinGameResponseDto> joinGame(
             @PathVariable Long gameId,
-            @RequestBody String username) {
+            @PathVariable String username) {
+        System.out.println("Joining game with ID: " + gameId + " and username: " + username);
         JoinGameResponseDto gameResponse = gameService.joinGame(gameId, username);
         return ResponseEntity.ok(gameResponse);
     }

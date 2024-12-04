@@ -5,6 +5,8 @@ import lombok.*;
 import tn.zeros.marketmaster.entity.enums.AssetType;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -24,6 +26,9 @@ public class Asset implements Serializable {
     @Column(nullable = false)
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    private AssetType type;
+
+
+    @OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<MarketData> marketData = new HashSet<>();
+
 }

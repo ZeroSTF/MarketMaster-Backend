@@ -16,6 +16,8 @@ public class NewGameResponseDto {
     private Duration maxPlayTime;
     private String creatorUsername;
     private LocalDate simulationStartDate;
+    private Long prize ;
+
 
     // Factory method to convert Game entity to GameResponseDto
     public static NewGameResponseDto fromEntity(Game game) {
@@ -27,6 +29,7 @@ public class NewGameResponseDto {
         dto.setMaxPlayTime(game.getMaxPlayTime());
         dto.setCreatorUsername(game.getCreator().getUsername());
         dto.setSimulationStartDate(game.getSimulationStartDate());
+        dto.setPrize(game.getPrize());
         return dto;
     }
 }

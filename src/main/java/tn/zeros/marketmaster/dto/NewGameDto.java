@@ -17,12 +17,15 @@ public class NewGameDto {
     private LocalDateTime endTimestamp ;
     private Duration maxPlayTime;
     private String username ;
+    private Long prize ;
+
     public  Game toEntity ()
     {
         return Game.builder().title(this.title).description(this.description)
                 .startTimestamp(this.startTimestamp)
                 .endTimestamp(this.endTimestamp)
-                .maxPlayTime(this.maxPlayTime).build();
+                .maxPlayTime(this.maxPlayTime)
+                .prize(this.prize).build();
 
     }
 

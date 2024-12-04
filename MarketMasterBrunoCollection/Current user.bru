@@ -1,0 +1,15 @@
+meta {
+  name: Current user
+  type: http
+  seq: 25
+}
+
+get {
+  url: http://localhost:8081/api/user/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJaZXJvU1RGIiwiaWF0IjoxNzMzMDY3OTA5LCJleHAiOjE3MzMwNjgyMDl9.T1PlmVX0wAVbSVVft9ZszG342CcFaSe2TPbwK1eAssBa-8Kk7FUdgvo2f8OlrgBgzmkCPu-kqQUhTzQyMEe8gWKzo-0FdoMPWDG0ZS6pVQC7owmhP3YAMcJToKaUqhpTyFll0d719KDgxO4otPEQtdql_d_IcnALDGpwmqIr2ULSH_NwsO2h_vWCkRuR-utQsuPU3e-ZVXj_46NN8DlrRB2gTSe5VWm58TzMeK6B1T1ff6uX5bUBw66mEJOmGAnJq410hNZ4oECaX_7Mj03MbD7JDPb4GGy4FYCerjeatYm7GetC416UAOcFkIAZ-u5SGaYRQBluzCKo6XQo77Cmcw
+}

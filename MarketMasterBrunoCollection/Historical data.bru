@@ -1,0 +1,15 @@
+meta {
+  name: Historical data
+  type: http
+  seq: 15
+}
+
+get {
+  url: http://localhost:5000/api/assets/AAPL/history?timeframe=60
+  body: none
+  auth: none
+}
+
+params:query {
+  timeframe: 60
+}

@@ -30,7 +30,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/ws-market-data/**").permitAll()
                         .requestMatchers("/asset/**").permitAll()
+                        .requestMatchers("/tran/**").permitAll()
+                        .requestMatchers("/order/**").permitAll()
+                        .requestMatchers("/portf/**").permitAll()
+                        .requestMatchers("/watchlist/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

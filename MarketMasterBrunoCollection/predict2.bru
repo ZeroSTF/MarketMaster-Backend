@@ -1,0 +1,21 @@
+meta {
+  name: predict2
+  type: http
+  seq: 22
+}
+
+post {
+  url: http://localhost:5000/api/predict/AAPL
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ6ZXJvc3RmIiwiaWF0IjoxNzMyNjQzNDc0LCJleHAiOjE3MzI2NDM3NzR9.mb7y8vVyQzFZRa-7yEnSXMXHfzJqy7__LhVYOnHTd4c1623TpOanLBWWVBxCQMLayCOTsQkJ-Nn-ggPiw6y5h_xOhOmxI-sqUK44rFH010i7argaxPDHBFUT-rlcMu3yiZ4Jd2CwrihTPcGUETciWu-e7WnEUY_BUWun1e05yq7vimnQqMK9EJrcA6Homg5tSS4wflkAiAbsMDLuicdmHMRt2JWvF7tlyf0DMjydY1KPDFr4XdzJaCksK7ujQcXMZIc8D-7saN5hhV0y4YWJs6hn2IZ_AuoXwC_hoayhOEfIxGO7FGgBPRZE4PKZ_2ZRBHO-YCmbxeDnxGN443bkqQ
+}
+
+body:json {
+  {
+    "train": true
+  }
+}

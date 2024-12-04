@@ -64,10 +64,9 @@ public class TransactionService {
         portfolioRepository.save(portfolio);
         return transactionDTO;
     }
-//modified by gaddour to use reel time data
+
     private void processBuyTransaction(Portfolio portfolio, TransactionDTO transactionDTO) {
         Asset asset1 = assetRepository.findBySymbol(transactionDTO.getSymbol());
-
         double totalCost = transactionDTO.getQuantity() * assetService.getCurrentPrice(asset1.getId());
         if (portfolio.getCash() < totalCost) {
             throw new InsufficientFundsException("Not enough cash for this transaction");

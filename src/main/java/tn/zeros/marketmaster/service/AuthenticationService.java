@@ -1,6 +1,7 @@
 package tn.zeros.marketmaster.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +18,8 @@ import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.CustomAuthenticationException;
 import tn.zeros.marketmaster.exception.TokenValidationException;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -26,6 +29,11 @@ public class AuthenticationService {
     private final UserService userService;
     private final PortfolioService portfolioService;
     private final UserDetailsService userDetailsService;
+
+    @Value("${jwt.access-token.expiration}")
+    private long jwtExpiration;
+    @Value("${jwt.refresh-token.expiration}")
+    private long refreshExpiration;
 
     public TokenResponseDTO authenticate(LoginRequestDTO loginRequest) {
         try {
@@ -38,8 +46,9 @@ public class AuthenticationService {
             String refreshToken = jwtTokenService.generateRefreshToken(userDetails);
 
             tokenStorageService.storeRefreshToken(userDetails.getUsername(), refreshToken);
+            String issuedAt = LocalDateTime.now().toString();
 
-            return new TokenResponseDTO(accessToken, refreshToken);
+            return new TokenResponseDTO(accessToken, refreshToken, jwtExpiration, issuedAt);
         } catch (BadCredentialsException e) {
             throw new CustomAuthenticationException("Invalid username or password");
         }
@@ -53,8 +62,9 @@ public class AuthenticationService {
 
         UserDetails userDetails = loadUserByUsername(username);
         String newAccessToken = jwtTokenService.generateToken(userDetails);
+        String issuedAt = LocalDateTime.now().toString();
 
-        return new TokenResponseDTO(newAccessToken, refreshToken);
+        return new TokenResponseDTO(newAccessToken, refreshToken, refreshExpiration, issuedAt);
     }
 
     public void logout(String username) {
