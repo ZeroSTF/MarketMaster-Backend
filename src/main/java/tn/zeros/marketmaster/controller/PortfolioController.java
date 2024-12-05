@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.*;
+import tn.zeros.marketmaster.entity.Option;
 import tn.zeros.marketmaster.service.HoldingService;
 import tn.zeros.marketmaster.service.LimitOrderService;
 import tn.zeros.marketmaster.service.PortfolioService;
@@ -72,5 +73,9 @@ public class PortfolioController {
     @GetMapping("/LimitOrder/{username}")
     public List<LimitOrderDTO> getLimitOrders(@PathVariable String username){
         return limitOrderService.getAllLimitOrders(username);
+    }
+    @GetMapping("/myoptions/{username}")
+    public  List<Option> getOptions(@PathVariable String username){
+        return portfolioService.getAllOptions(username);
     }
 }
