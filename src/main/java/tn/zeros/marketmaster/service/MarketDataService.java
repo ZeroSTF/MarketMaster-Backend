@@ -1,5 +1,6 @@
 package tn.zeros.marketmaster.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,10 +90,28 @@ public class MarketDataService {
                         request.getGameId(), asset.getId(), userTimestamps.get(request.getUsername()));
 
                 if (marketData != null) {
-                    logger.info("New market data available for user {}: {}", request.getUsername(), marketData.toString());
+                    MarketDataStreamDto marketDataDto = new MarketDataStreamDto(marketData);
+
+                    logger.info("Sending market data: {} to user {}", marketDataDto,request.getUsername());
                     userTimestamps.put(request.getUsername(), marketData.getTimestamp());
-                    messagingTemplate.convertAndSendToUser(
-                            request.getUsername(), "/queue/market-data", new MarketDataStreamDto(marketData));
+                    try {
+                        String jsonMessage = new ObjectMapper().writeValueAsString(marketDataDto);
+                        logger.info("Serialized Market Data JSON: {}", jsonMessage);
+                    } catch (Exception e) {
+                        logger.error("Serialization error", e);
+                    }
+                    try {
+                        messagingTemplate.convertAndSendToUser(
+                                request.getUsername(),
+                                "/queue/market-data",
+                                marketDataDto
+                        );
+                        logger.info("Message sent successfully via SimpMessagingTemplate");
+                    } catch (Exception e) {
+                        logger.error("Failed to send WebSocket message", e);
+                    }
+                    logger.info("Successfully sent market data to user {}", request.getUsername());
+
                 } else {
                     logger.warn("No market data available for user {} after timestamp {}",
                             request.getUsername(), userTimestamps.get(request.getUsername()));
