@@ -1,15 +1,16 @@
 package tn.zeros.marketmaster.service;
 
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import tn.zeros.marketmaster.entity.StockPredictionResponse;
+import tn.zeros.marketmaster.dto.AssetPerformance;
 
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -17,23 +18,33 @@ public class StockPredictionService {
 
     private final WebClient webClient;
 
-    public Mono<StockPredictionResponse> getStockPrediction(String symbol, boolean train) {
-        String payload = "{ \"train\": " + train + " }";  // Only sending 'train' in the body
 
+    public Mono<List<AssetPerformance>> getAssetPerformances(List<String> symbols) {
         return webClient.post()
-                .uri("/api/predict/{symbol}", symbol)  // Use the 'symbol' as a path variable
+                .uri(  "/api/performance")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(payload)
+                .bodyValue(Map.of("symbols", symbols)) // Send symbols in the body
                 .retrieve()
-                .bodyToMono(StockPredictionResponse.class)
+                .bodyToFlux(AssetPerformance.class)
+                .collectList() // Convert Flux to List
                 .onErrorResume(e -> {
-                    // Handle error and return a response with an error message
-                    return Mono.just(new StockPredictionResponse(
-                            0.0,  // Placeholder values
-                            "Error",
-                            0.0,
-                            0.0
-                    ));
+
+                    System.err.println("Error fetching asset performances: " + e.getMessage());
+                    return Mono.just(List.of());
+                });
+    }
+    public Mono<Map<String, Map<String, Double>>> getCorrelationMatrix(List<String> symbols) {
+        System.out.println("Sending symbols to Flask API: " + symbols);
+        return webClient.post()
+                .uri("/api/correlation")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Collections.singletonMap("symbols", symbols))
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Map<String, Double>>>() {})
+                .doOnNext(response -> System.out.println("Received response from Flask API: " + response))
+                .onErrorResume(e -> {
+                    e.printStackTrace();
+                    return Mono.just(Collections.emptyMap());
                 });
     }
 }

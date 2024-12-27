@@ -70,6 +70,13 @@ public class LimitOrderService {
                 .map(LimitOrderDTO::fromEntity)
                 .collect(Collectors.toList());
     }
+    @Transactional
+    public void deleteLimitOrder(String username,LimitOrderDTO limitOrderDTO) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User with username: " + username + " not found."));
+        Asset asset = assetRepository.findBySymbol(limitOrderDTO.getSymbol());
+        limitOrderRepository.deleteLimitOrderByAssetAndLimitPriceAndUser(asset, limitOrderDTO.getLimitPrice(),user);
+    }
     @Scheduled(fixedRate = 2000)
     @Transactional
     public void syncLimitOrder(){

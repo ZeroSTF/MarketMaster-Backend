@@ -3,6 +3,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.service.HoldingService;
 import tn.zeros.marketmaster.service.LimitOrderService;
@@ -72,5 +73,15 @@ public class PortfolioController {
     @GetMapping("/LimitOrder/{username}")
     public List<LimitOrderDTO> getLimitOrders(@PathVariable String username){
         return limitOrderService.getAllLimitOrders(username);
+    }
+
+    @GetMapping("/performances/{username}")
+    public Mono<List<AssetPerformance>> getPortfolioPerformances(@PathVariable String username) {
+        return portfolioService.getPortfolioPerformances(username);
+    }
+
+    @GetMapping("/correlation/{username}")
+    public Mono<Map<String, Map<String, Double>>> getPortfolioCorrelationMatrix(@PathVariable String username) {
+        return portfolioService.getPortfolioCorrelationMatrix(username);
     }
 }

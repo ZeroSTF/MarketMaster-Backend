@@ -20,4 +20,10 @@ public class TransactionController {
         log.info("Received transaction for user {}: {}", username, t);
         return transactionService.addTransaction(username,t);
     }
+
+    @GetMapping("/max/{username}/{symbol}")
+    public TransactionDTO max(@PathVariable("username") String username, @PathVariable("symbol") String symbol){
+
+        return transactionService.findMaxQuantity(symbol,username);
+    }
 }
