@@ -1,35 +1,29 @@
 package tn.zeros.marketmaster.dto;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import tn.zeros.marketmaster.entity.MarketData;
-
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-public class MarketDataStreamDto implements Serializable {
-    private Long id;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+@AllArgsConstructor
+@NoArgsConstructor
+public class MarketDataStreamDto {
     private LocalDateTime timestamp;
-
+    private String assetSymbol;
     private Double open;
     private Double high;
     private Double low;
     private Double close;
     private Long volume;
-    private String assetSymbol;
 
     public MarketDataStreamDto(MarketData marketData) {
-        this.id = marketData.getId();
-        this.timestamp = marketData.getTimestamp(); // Keep as LocalDateTime
+        this.timestamp = marketData.getTimestamp();
+        this.assetSymbol = marketData.getAsset().getSymbol();
         this.open = marketData.getOpen();
         this.high = marketData.getHigh();
         this.low = marketData.getLow();
         this.close = marketData.getClose();
         this.volume = marketData.getVolume();
-        this.assetSymbol = marketData.getAsset().getSymbol();
     }
 }
