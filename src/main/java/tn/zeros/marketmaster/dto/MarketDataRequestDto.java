@@ -6,5 +6,6 @@ import lombok.Data;
 public class MarketDataRequestDto {
     private Long gameId;
     private String assetSymbol;
-    private int updateRate; // Update rate in seconds
+    private int updateRate;
+    private String username;
 }

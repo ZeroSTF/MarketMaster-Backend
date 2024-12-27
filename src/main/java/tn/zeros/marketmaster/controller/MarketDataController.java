@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.MarketDataRequestDto;
 import tn.zeros.marketmaster.service.MarketDataService;
 
+import java.security.Principal;
+
 @Controller
 @RequiredArgsConstructor
 public class MarketDataController {
@@ -15,6 +17,13 @@ public class MarketDataController {
 
     @MessageMapping("/market-data/request")
     public void handleMarketDataRequest(MarketDataRequestDto request) {
+        System.out.println("Requested by username: " + request.getUsername());
         marketDataService.startStreaming(request);
+    }
+
+
+    @MessageMapping("/market-data/stop")
+    public void handleMarketDataStop(String username) {
+        marketDataService.stopStreaming(username);
     }
 }
