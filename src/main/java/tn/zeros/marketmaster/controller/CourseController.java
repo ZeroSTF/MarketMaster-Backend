@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.CourseDTO;
+import tn.zeros.marketmaster.dto.UserProgressDTO;
 import tn.zeros.marketmaster.service.CourseService;
+import tn.zeros.marketmaster.service.UserProgressService;
 
 import java.util.List;
 
@@ -17,6 +19,7 @@ import java.util.List;
 @Slf4j
 public class CourseController {
     private final CourseService courseService;
+    private final UserProgressService userProgressService;
 
     @PostMapping
     public ResponseEntity<CourseDTO> createCourse(@Valid @RequestBody CourseDTO courseDTO) {
@@ -47,4 +50,36 @@ public class CourseController {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
     }
+
+    // User-Progress
+    @PostMapping("/{courseId}/progress")
+    public ResponseEntity<UserProgressDTO> startCourse(
+            @RequestParam Long userId,
+            @PathVariable Long courseId) {
+        return new ResponseEntity<>(
+                userProgressService.startCourse(userId, courseId),
+                HttpStatus.CREATED
+        );
+    }
+
+    @PutMapping("progress/{progressId}")
+    public ResponseEntity<UserProgressDTO> updateProgress(
+            @PathVariable Long progressId,
+            @Valid @RequestBody UserProgressDTO progressDTO) {
+        return ResponseEntity.ok(userProgressService.updateProgress(progressId, progressDTO));
+    }
+
+
+    @GetMapping("/{courseId}/progress/{userId}")
+    public ResponseEntity<List<UserProgressDTO>> getCourseProgress(
+            @PathVariable Long courseId,
+            @PathVariable Long userId) {
+        return ResponseEntity.ok(userProgressService.getCourseProgress(courseId, userId));
+    }
+    @GetMapping("/{userId}/progress")
+    public ResponseEntity<List<UserProgressDTO>> getAllProgressForUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(userProgressService.getAllProgressForUser(userId));
+    }
+
+
 }
