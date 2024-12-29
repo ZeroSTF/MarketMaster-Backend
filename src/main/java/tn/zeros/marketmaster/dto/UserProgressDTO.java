@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserProgressDTO {
-    private Long userId;
-    private Long courseId;
+    private UserDTO user;
+    private CourseDTO course;
     private boolean completed;
     private Integer score;
     private String progress;
@@ -34,8 +34,8 @@ public class UserProgressDTO {
 
     public static UserProgressDTO fromEntity(UserProgress entity) {
         return UserProgressDTO.builder()
-                .userId(entity.getUser().getId())
-                .courseId(entity.getCourse().getId())
+                .user(entity.getUser() == null ? null : UserDTO.fromEntity(entity.getUser()))
+                .course(entity.getCourse() == null ? null : CourseDTO.fromEntity(entity.getCourse()))
                 .completed(entity.isCompleted())
                 .score(entity.getScore())
                 .progress(entity.getProgress())

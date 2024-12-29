@@ -82,7 +82,6 @@ public class UserProgressService {
                 .toList();
     }
     public List<UserProgressDTO> getAllProgressForUser(Long userId) {
-        // Check if the user exists, if needed
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException("User not found with id: " + userId);
         }
