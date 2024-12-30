@@ -36,6 +36,8 @@ public class SecurityConfig {
                         .requestMatchers("/order/**").permitAll()
                         .requestMatchers("/portf/**").permitAll()
                         .requestMatchers("/watchlist/**").permitAll()
+                        .requestMatchers("/courses/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
