@@ -28,7 +28,7 @@ public class UserProgress implements Serializable {
     private boolean completed;
     private Integer score;
     private LocalDateTime lastAccessed;
-    private String progress;
+    private Integer progress;
     private LocalDateTime endDate;
     private LocalDateTime startDate;
 
