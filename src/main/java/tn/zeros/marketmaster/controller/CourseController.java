@@ -52,12 +52,12 @@ public class CourseController {
     }
 
     // User-Progress
-    @PostMapping("/{courseId}/progress")
+    @PostMapping("/{courseTitle}/progress")
     public ResponseEntity<UserProgressDTO> startCourse(
-            @RequestParam Long userId,
-            @PathVariable Long courseId) {
+            @RequestParam String username,
+            @PathVariable String courseTitle) {
         return new ResponseEntity<>(
-                userProgressService.startCourse(userId, courseId),
+                userProgressService.startCourse(username, courseTitle),
                 HttpStatus.CREATED
         );
     }
@@ -76,9 +76,9 @@ public class CourseController {
             @PathVariable Long userId) {
         return ResponseEntity.ok(userProgressService.getCourseProgress(courseId, userId));
     }
-    @GetMapping("/{userId}/progress")
-    public ResponseEntity<List<UserProgressDTO>> getAllProgressForUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(userProgressService.getAllProgressForUser(userId));
+    @GetMapping("/{userName}/progress")
+    public ResponseEntity<List<UserProgressDTO>> getAllProgressForUser(@PathVariable String userName) {
+        return ResponseEntity.ok(userProgressService.getAllProgressForUser(userName));
     }
 
 

@@ -21,27 +21,27 @@ public class UserProgressService {
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
 
-    public UserProgressDTO startCourse(Long userId, Long courseId) {
-        if (userProgressRepository.findByUserIdAndCourseId(userId, courseId).isPresent()) {
+    public UserProgressDTO startCourse(String userName, String courseTitle) {
+
+        if (userProgressRepository.findByUserUsernameAndCourseTitle(userName, courseTitle).isPresent()) {
             throw new UserProgressAlreadyExistsException("User has already started this course");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new CourseNotFoundException("Course not found with id: " + courseId));
+        User user = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userName));
+        Course course = courseRepository.findByTitle(courseTitle)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id: " + courseTitle));
 
         UserProgress progress = UserProgress.builder()
                 .user(user)
                 .course(course)
                 .completed(false)
                 .score(0)
-                .progress("0%")
+                .progress(0)
                 .lastAccessed(LocalDateTime.now())
                 .startDate(LocalDateTime.now())
                 .build();
 
-        log.info("Starting new course progress for user: {} and course: {}", userId, courseId);
         UserProgress savedProgress = userProgressRepository.save(progress);
         return UserProgressDTO.fromEntity(savedProgress);
     }
@@ -50,13 +50,13 @@ public class UserProgressService {
         UserProgress progress = userProgressRepository.findById(progressId)
                 .orElseThrow(() -> new UserProgressNotFoundException("Progress not found with id: " + progressId));
 
-        double currentProgress = Double.parseDouble(progress.getProgress().replace("%", ""));
-        double newProgressValue = Double.parseDouble(progressDTO.getProgress().replace("%", ""));
-        double totalProgress = Math.min(currentProgress + newProgressValue, 100.0);
+        int currentProgress = progress.getProgress();
+        int newProgressValue = progressDTO.getProgress();
+        int totalProgress = Math.min(currentProgress + newProgressValue, 100);
 
-        progress.setProgress(totalProgress + "%");
+        progress.setProgress(totalProgress);
 
-        if (totalProgress >= 100.0) {
+        if (totalProgress >= 100) {
             progress.setCompleted(true);
             progress.setEndDate(LocalDateTime.now());
         }
@@ -64,7 +64,7 @@ public class UserProgressService {
         progress.setScore(progressDTO.getScore());
         progress.setLastAccessed(LocalDateTime.now());
 
-        log.info("Updating progress with id: {}. New progress: {}", progressId, progress.getProgress());
+        log.info("Updating progress with id: {}. New progress: {}", progressId, totalProgress);
         UserProgress updatedProgress = userProgressRepository.save(progress);
         return UserProgressDTO.fromEntity(updatedProgress);
     }
@@ -81,13 +81,13 @@ public class UserProgressService {
                 .map(UserProgressDTO::fromEntity)
                 .toList();
     }
-    public List<UserProgressDTO> getAllProgressForUser(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException("User not found with id: " + userId);
+    public List<UserProgressDTO> getAllProgressForUser(String userName) {
+        if (userRepository.findByUsername(userName).isEmpty()) {
+            throw new UserNotFoundException("User not found with user name: " + userName);
         }
 
-        log.info("Fetching all progress for user: {}", userId);
-        return userProgressRepository.findByUserId(userId).stream()
+        log.info("Fetching all progress for user: {}", userName);
+        return userProgressRepository.findByUserUsername(userName).stream()
                 .map(UserProgressDTO::fromEntity)
                 .toList();
     }

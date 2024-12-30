@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserProgressRepository extends JpaRepository<UserProgress, Long> {
-    List<UserProgress> findByUserId(Long userId);
+    List<UserProgress> findByUserUsername(String userName);
     List<UserProgress> findByCourseIdAndUserId(Long courseId, Long userId);
-    Optional<UserProgress> findByUserIdAndCourseId(Long userId, Long courseId);
+    Optional<UserProgress> findByUserUsernameAndCourseTitle(String username, String courseTitle);
+
 }
