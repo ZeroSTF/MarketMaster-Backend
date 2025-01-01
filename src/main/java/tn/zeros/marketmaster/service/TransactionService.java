@@ -36,10 +36,10 @@ public class TransactionService {
         return transactionDTOS;
     }
 
-   @Transactional
+    @Transactional
     public TransactionDTO addTransaction(String username, TransactionDTO transactionDTO) {
-       User user = userRepository.findByUsername(username)
-               .orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Portfolio portfolio = user.getPortfolio();
         if (portfolio == null) {
@@ -97,7 +97,7 @@ public class TransactionService {
         if (holding.getQuantity() == 0) {
             portfolio.getHoldings().remove(holding);
         }
-        holdingRepository.save(holding); 
+        holdingRepository.save(holding);
         Asset asset2 = assetRepository.findBySymbol(transactionDTO.getSymbol());
         double totalProceeds = transactionDTO.getQuantity() * transactionDTO.getPrice();
         portfolio.setCash(portfolio.getCash() + totalProceeds);

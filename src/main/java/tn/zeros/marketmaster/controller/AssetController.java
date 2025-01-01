@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import tn.zeros.marketmaster.dto.AssetDTO;
 import tn.zeros.marketmaster.dto.PageResponseDTO;
 import tn.zeros.marketmaster.service.AssetService;
-import tn.zeros.marketmaster.service.StockPredictionService;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,7 +14,6 @@ import tn.zeros.marketmaster.service.StockPredictionService;
 @Slf4j
 public class AssetController {
     private final AssetService assetService;
-    private final StockPredictionService stockPredictionService;
 
     @GetMapping("/getAll")
     public ResponseEntity<PageResponseDTO<AssetDTO>> getAllAssets(

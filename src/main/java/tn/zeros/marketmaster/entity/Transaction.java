@@ -25,6 +25,7 @@ public class Transaction implements Serializable {
     @ManyToOne
     @JoinColumn(name = "asset_id")
     private Asset asset;
+    
 
     @Enumerated(EnumType.STRING)
     private TransactionType type;

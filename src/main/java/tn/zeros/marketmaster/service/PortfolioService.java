@@ -293,6 +293,16 @@ public class PortfolioService {
                 .limit(5)
                 .collect(Collectors.toList());
     }
+   public List<Option> getAllOptions(String username) {
+       User user = userRepository.findByUsername(username)
+               .orElseThrow(() -> new UserNotFoundException("User not found "));
+
+       Portfolio portfolio = user.getPortfolio();
+       if (portfolio == null) {
+           throw new PortfolioNotFoundException("Portfolio not found for user: " + username);
+       }
+       return portfolio.getOptions().stream().toList();
+    }
 
     public List<String> getAssetSymbols(String username) {
         User user = userRepository.findByUsername(username)
