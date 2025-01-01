@@ -76,8 +76,9 @@ public class PortfolioController {
         return limitOrderService.getAllLimitOrders(username);
     }
     @GetMapping("/myoptions/{username}")
-    public  List<Option> getOptions(@PathVariable String username){
+    public  List<Option> getOptions(@PathVariable String username) {
         return portfolioService.getAllOptions(username);
+    }
 
     @GetMapping("/performances/{username}")
     public Mono<List<AssetPerformance>> getPortfolioPerformances(@PathVariable String username) {
