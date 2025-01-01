@@ -1,10 +1,8 @@
 package tn.zeros.marketmaster.service;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.entity.*;
@@ -99,7 +97,9 @@ public class PortfolioService {
                 .mapToDouble(t -> t.getPrice() * t.getQuantity())
                 .sum();
 
-        return totalHolding - portfolio.getTotalValue().get(getStartOfDay());
+        Double todayValue = portfolio.getTotalValue().getOrDefault(getStartOfDay(), 0.0);
+
+        return totalHolding - todayValue;
     }
 
     public OverviewDTO prepareOverview(String username) {
@@ -113,16 +113,30 @@ public class PortfolioService {
 
         OverviewDTO overview = new OverviewDTO();
 
-
         overview.setAnnualReturn(roundToTwoDecimalPlaces(calculateReturn(username, 1)));
         overview.setCash(roundToTwoDecimalPlaces(portfolio.getCash()));
         overview.setHoldingNumber(holdingRepository.countByPortfolioId(portfolio.getId()));
+
+
         double totalValueToday = portfolio.getTotalValue().getOrDefault(getStartOfDay(), 0.0);
         double totalValueYesterday = portfolio.getTotalValue().getOrDefault(getStartOfYesterday(), 0.0);
-        overview.setTotalValue(roundToTwoDecimalPlaces(totalValueToday ));
+        overview.setTotalValue(roundToTwoDecimalPlaces(totalValueToday));
+
+
         double cashYesterday = calculateCashYesterday(username);
-        overview.setCashPercentage(roundToTwoDecimalPlaces((portfolio.getCash() - cashYesterday) * 100 / cashYesterday));
-        overview.setTotalValuePercentage(roundToTwoDecimalPlaces((totalValueToday - totalValueYesterday) * 100 / totalValueToday));
+        if (cashYesterday != 0) {
+            overview.setCashPercentage(roundToTwoDecimalPlaces((portfolio.getCash() - cashYesterday) * 100 / cashYesterday));
+        } else {
+            overview.setCashPercentage(0.0);
+        }
+
+
+        if (totalValueToday != 0) {
+            overview.setTotalValuePercentage(roundToTwoDecimalPlaces(
+                    (totalValueToday - totalValueYesterday) * 100 / totalValueToday));
+        } else {
+            overview.setTotalValuePercentage(0.0);
+        }
 
         overview.setDailyChange(getDailyChange(username));
 
