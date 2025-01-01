@@ -8,6 +8,7 @@ import tn.zeros.marketmaster.entity.Game;
 import tn.zeros.marketmaster.entity.MarketData;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface MarketDataRepository extends JpaRepository<MarketData , Long> {
@@ -16,4 +17,10 @@ public interface MarketDataRepository extends JpaRepository<MarketData , Long> {
             Long gameId, Long assetId, LocalDateTime timestamp);
 
     @Query("SELECT md FROM MarketData md WHERE md.asset = :asset AND md.game = :game ORDER BY md.timestamp DESC")
-    MarketData findTopByAssetAndGameOrderByTimestampDesc(@Param("asset") Asset asset, @Param("game") Game game);}
+    MarketData findTopByAssetAndGameOrderByTimestampDesc(@Param("asset") Asset asset, @Param("game") Game game);
+
+
+
+    List<MarketData> findByGameAndAssetAndTimestampBeforeOrderByTimestampAsc(Game game, Asset asset, LocalDateTime timestamp);
+
+    List<MarketData> findTop50ByGameAndAssetAndTimestampAfterOrderByTimestampAsc(Game game, Asset asset, LocalDateTime timestamp);}
