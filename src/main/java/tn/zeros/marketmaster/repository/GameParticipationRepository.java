@@ -7,7 +7,9 @@ import tn.zeros.marketmaster.entity.Game;
 import tn.zeros.marketmaster.entity.GameParticipation;
 import tn.zeros.marketmaster.entity.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface GameParticipationRepository extends JpaRepository<GameParticipation,Long> {
     boolean existsByGameAndUser(Game game, User user);
@@ -20,4 +22,12 @@ public interface GameParticipationRepository extends JpaRepository<GameParticipa
     List<Game> findGamesByUser(@Param("user") User user);
 
     List<GameParticipation> findByGame(Game game);
+
+    @Query("SELECT gp.lastPauseTimestamp " +
+            "FROM GameParticipation gp " +
+            "WHERE gp.user = :user AND gp.game.id = :gameId")
+    LocalDateTime findLastPauseTimestamp(@Param("user") User user,
+                                         @Param("gameId") Long gameId);
+
+    Optional<GameParticipation> findByGameAndUser(Game game, User user);
 }

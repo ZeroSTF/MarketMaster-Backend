@@ -1,17 +1,13 @@
 package tn.zeros.marketmaster.service;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
 import tn.zeros.marketmaster.dto.*;
 import tn.zeros.marketmaster.entity.*;
 import tn.zeros.marketmaster.entity.enums.TransactionType;
-import tn.zeros.marketmaster.exception.AssetAlreadyInWatchlistException;
-import tn.zeros.marketmaster.exception.AssetNotFoundException;
-import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
-import tn.zeros.marketmaster.exception.UserNotFoundException;
+import tn.zeros.marketmaster.exception.*;
 import tn.zeros.marketmaster.repository.*;
 
 import java.math.BigDecimal;
@@ -29,6 +25,7 @@ public class PortfolioService {
     private final HoldingRepository holdingRepository;
     private final AssetRepository  assetRepository;
     private final UserWatchlistRepository userWatchlistRepository;
+    private final StockPredictionService stockPredictionService;
 
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
@@ -100,7 +97,9 @@ public class PortfolioService {
                 .mapToDouble(t -> t.getPrice() * t.getQuantity())
                 .sum();
 
-        return totalHolding - portfolio.getTotalValue().get(getStartOfDay());
+        Double todayValue = portfolio.getTotalValue().getOrDefault(getStartOfDay(), 0.0);
+
+        return totalHolding - todayValue;
     }
 
     public OverviewDTO prepareOverview(String username) {
@@ -114,16 +113,30 @@ public class PortfolioService {
 
         OverviewDTO overview = new OverviewDTO();
 
-
         overview.setAnnualReturn(roundToTwoDecimalPlaces(calculateReturn(username, 1)));
         overview.setCash(roundToTwoDecimalPlaces(portfolio.getCash()));
         overview.setHoldingNumber(holdingRepository.countByPortfolioId(portfolio.getId()));
+
+
         double totalValueToday = portfolio.getTotalValue().getOrDefault(getStartOfDay(), 0.0);
         double totalValueYesterday = portfolio.getTotalValue().getOrDefault(getStartOfYesterday(), 0.0);
-        overview.setTotalValue(roundToTwoDecimalPlaces(totalValueToday ));
+        overview.setTotalValue(roundToTwoDecimalPlaces(totalValueToday));
+
+
         double cashYesterday = calculateCashYesterday(username);
-        overview.setCashPercentage(roundToTwoDecimalPlaces((portfolio.getCash() - cashYesterday) * 100 / cashYesterday));
-        overview.setTotalValuePercentage(roundToTwoDecimalPlaces((totalValueToday - totalValueYesterday) * 100 / totalValueToday));
+        if (cashYesterday != 0) {
+            overview.setCashPercentage(roundToTwoDecimalPlaces((portfolio.getCash() - cashYesterday) * 100 / cashYesterday));
+        } else {
+            overview.setCashPercentage(0.0);
+        }
+
+
+        if (totalValueToday != 0) {
+            overview.setTotalValuePercentage(roundToTwoDecimalPlaces(
+                    (totalValueToday - totalValueYesterday) * 100 / totalValueToday));
+        } else {
+            overview.setTotalValuePercentage(0.0);
+        }
 
         overview.setDailyChange(getDailyChange(username));
 
@@ -291,4 +304,37 @@ public class PortfolioService {
        return portfolio.getOptions().stream().toList();
     }
 
+    public List<String> getAssetSymbols(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found for username: " + username));
+
+        Portfolio portfolio = user.getPortfolio();
+
+        // Extract symbols from portfolio holdings
+        Set<Holding> holdings = portfolio.getHoldings();
+        if (holdings.isEmpty()) {
+            throw new PortfolioEmptyException("Portfolio is empty for username: " + username);
+        }
+
+        // Stream holdings to extract symbols
+        return holdings.stream()
+                .map(holding -> holding.getAsset().getSymbol())
+                .collect(Collectors.toList());
+    }
+    public Mono<List<AssetPerformance>> getPortfolioPerformances(String username) {
+        // Fetch user and portfolio
+        List<String> symbols = getAssetSymbols(username);
+        return stockPredictionService.getAssetPerformances(symbols);
+    }
+    public Mono<Map<String, Map<String, Double>>> getPortfolioCorrelationMatrix(String username) {
+        List<String> symbols = getAssetSymbols(username);
+        if (symbols.isEmpty()) {
+            System.out.println("No symbols found for user: " + username);
+        } else {
+            System.out.println("Symbols for user " + username + ": " + symbols);
+        }
+        return stockPredictionService.getCorrelationMatrix(symbols);
+    }
+
 }
+

@@ -49,6 +49,50 @@ public class GameService {
     private static final String FLASK_API_URL_NEWS = "http://localhost:5000/api/assets/news";
 
     private static final Logger logger = LoggerFactory.getLogger(GameService.class);  // Initialize the logger
+    public GameStateDto getGameState(Long gameId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("No user found with username: " + username));
+
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new EntityNotFoundException("Game not found with ID: " + gameId));
+
+        GameParticipation participation = gameParticipationRepository
+                .findByGameAndUser(game, user)
+                .orElseThrow(() -> new EntityNotFoundException("Participation not found for user in this game"));
+
+        GamePortfolio portfolio = gamePortfolioRepository.findByUserAndGame(user, game)
+                .orElseThrow(() -> new EntityNotFoundException("portfolio not found for user in this game"));;
+
+        return GameStateDto.builder()
+                .gameMetadata(new GameMetadataDto(game))
+                .gameParticipation(new GameParticipationDto(participation))
+                .gamePortfolio(new GamePortfolioDto(portfolio))
+                .build();
+    }
+
+    public MarketDataResponseDto getMarketData(MarketDataRequestDto request) {
+        // Fetch Game
+        Game game = gameRepository.findById(request.getGameId())
+                .orElseThrow(() -> new EntityNotFoundException("Game not found with ID: " + request.getGameId()));
+
+        // Fetch Asset
+        Asset asset = assetRepository.findBySymbol(request.getAssetSymbol());
+
+
+        // Fetch Past Market Data
+        List<MarketData> pastMarketData = marketDataRepository
+                .findByGameAndAssetAndTimestampBeforeOrderByTimestampAsc(game, asset, request.getLastPauseTimestamp());
+
+        // Fetch Upcoming Market Data (next 50)
+        List<MarketData> upcomingMarketData = marketDataRepository
+                .findTop50ByGameAndAssetAndTimestampAfterOrderByTimestampAsc(game, asset, request.getLastPauseTimestamp());
+
+        // Map to DTO
+        return MarketDataResponseDto.builder()
+                .pastMarketData(pastMarketData.stream().map(MarketDataStreamDto::new).collect(Collectors.toList()))
+                .upcomingMarketData(upcomingMarketData.stream().map(MarketDataStreamDto::new).collect(Collectors.toList()))
+                .build();
+    }
 
 
     private LocalDate getRandomDateWithinLast20Years() {
@@ -606,8 +650,22 @@ public class GameService {
             // Save the updated portfolio
             portfolioRepository.save(userPortfolio);
         }
+
+
     }
 
 
+    public boolean updateGameParticipationTimestamp(Long gameParticipationId, LocalDateTime lastPauseTimestamp) {
+        // Fetch the participation record from the database
+        var participation = gameParticipationRepository.findById(gameParticipationId);
 
+        if (participation.isPresent()) {
+            // Update the timestamp and save
+            participation.get().setLastPauseTimestamp(lastPauseTimestamp);
+            gameParticipationRepository.save(participation.get());
+            return true;
+        }
+
+        return false;
+    }
 }

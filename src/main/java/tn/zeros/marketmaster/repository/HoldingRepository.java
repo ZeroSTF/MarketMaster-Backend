@@ -16,4 +16,6 @@ public interface HoldingRepository extends JpaRepository<Holding,Long> {
     public int countByPortfolioId(@Param("id") Long id);
 
     public Set<Holding> findAllByPortfolio(Portfolio p);
+
+
 }

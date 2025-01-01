@@ -85,5 +85,27 @@ public class GameController {
         return ResponseEntity.ok(performanceDto);
     }
 
+    @GetMapping("/{gameId}/state")
+    public ResponseEntity<GameStateDto> getGameState(
+            @PathVariable Long gameId,
+            @RequestParam String username) {
+        GameStateDto gameState = gameService.getGameState(gameId, username);
+        return ResponseEntity.ok(gameState);
+    }
+
+    @PostMapping("/{gameId}/market-data")
+    public ResponseEntity<MarketDataResponseDto> getMarketData(@RequestBody MarketDataRequestDto request) {
+        return ResponseEntity.ok(gameService.getMarketData(request));
+    }
+    @PutMapping("/update-timestamp")
+    public ResponseEntity<Void> updateTimestamp(@RequestBody UpdateTimestampRequest request) {
+        boolean success = gameService.updateGameParticipationTimestamp(request.getGameParticipationId(), request.getLastPauseTimestamp());
+
+        if (success) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(400).build();
+        }
+    }
 
 }

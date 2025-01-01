@@ -23,4 +23,5 @@ public interface MarketDataRepository extends JpaRepository<MarketData , Long> {
 
     List<MarketData> findByGameAndAssetAndTimestampBeforeOrderByTimestampAsc(Game game, Asset asset, LocalDateTime timestamp);
 
-    List<MarketData> findTop50ByGameAndAssetAndTimestampAfterOrderByTimestampAsc(Game game, Asset asset, LocalDateTime timestamp);}
+    List<MarketData> findTop50ByGameAndAssetAndTimestampAfterOrderByTimestampAsc(Game game, Asset asset, LocalDateTime timestamp);
+}

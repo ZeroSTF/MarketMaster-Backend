@@ -22,4 +22,8 @@ public class AssetController {
         PageResponseDTO<AssetDTO> response = assetService.getAllAssets(page, size);
         return ResponseEntity.ok(response);
     }
+
+
+
+
 }

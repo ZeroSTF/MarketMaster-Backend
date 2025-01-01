@@ -1,12 +1,13 @@
 package tn.zeros.marketmaster.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
-public class MarketDataRequestDto {
-    private Long gameId;
-    private String assetSymbol;
+@Builder
+public class UpdateTimestampRequest {
+    private Long gameParticipationId;
     private LocalDateTime lastPauseTimestamp;
 }

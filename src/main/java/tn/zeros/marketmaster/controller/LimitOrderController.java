@@ -16,4 +16,8 @@ public class LimitOrderController {
     public LimitOrderDTO addOrder(@PathVariable("username") String username, @RequestBody LimitOrderDTO limitOrderDTO) {
         return limitOrderService.addLimitOrder(username,limitOrderDTO);
     }
+    @DeleteMapping("/delete/{username}")
+    public void deleteOrder(@PathVariable("username") String username, @RequestBody LimitOrderDTO limitOrderDTO) {
+        limitOrderService.deleteLimitOrder(username,limitOrderDTO);
+    }
 }
