@@ -4,24 +4,33 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import tn.zeros.marketmaster.dto.TransactionDTO;
 import tn.zeros.marketmaster.entity.Option;
 import tn.zeros.marketmaster.entity.Portfolio;
+import tn.zeros.marketmaster.entity.Transaction;
 import tn.zeros.marketmaster.entity.User;
+import tn.zeros.marketmaster.entity.enums.OptionStatus;
+import tn.zeros.marketmaster.entity.enums.TransactionType;
 import tn.zeros.marketmaster.exception.FlaskServiceRegistrationException;
 import tn.zeros.marketmaster.exception.PortfolioNotFoundException;
+import tn.zeros.marketmaster.exception.TransactionIncorrectException;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.OptionRepository;
 import tn.zeros.marketmaster.repository.PortfolioRepository;
 import tn.zeros.marketmaster.repository.UserRepository;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static tn.zeros.marketmaster.entity.enums.OptionType.CALL;
 
 @Service
 @AllArgsConstructor
@@ -33,6 +42,7 @@ public class OptionService {
     private final PortfolioRepository portfolioRepository;
     private final AssetService assetService;
     private final WebClient webClient;
+    private final TransactionService transactionService;
 
     public Option buyOption(String username, Option option) {
 
@@ -120,5 +130,48 @@ public class OptionService {
                 })
                 .block(); // Make the call synchronous // This makes the call synchronous and returns the value directly
     }
+    public TransactionDTO applyOption(Option option ,String username){
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
 
+
+        Portfolio portfolio = user.getPortfolio();
+        if (portfolio == null) {
+            throw new PortfolioNotFoundException("Portfolio not found for user: " + username);
+        }
+        TransactionDTO transactionDTO = new TransactionDTO();
+        transactionDTO.setPrice(option.getStrikePrice());
+        transactionDTO.setSymbol(option.getSymbol());
+        transactionDTO.setTimeStamp(LocalDateTime.now());
+        transactionDTO.setQuantity(100);
+        switch (option.getType()) {
+            case CALL :
+                transactionDTO.setType(TransactionType.BUY);
+                break;
+            case PUT:
+                transactionDTO.setType(TransactionType.SELL);
+                break;
+            default:
+                throw new TransactionIncorrectException("Invalid transaction type");
+        }
+        TransactionDTO transactionDTOResponse = transactionService.addTransaction(username,transactionDTO);
+        if(transactionDTOResponse!=null){
+            option.setStatus(OptionStatus.USED);
+            optionRepository.save(option);
+            return transactionDTOResponse;
+        }
+        return null;
+
+
+    }
+    @Scheduled(cron = "0 0 0 * * *")
+    public void expiration(){
+        List<Option> options = optionRepository.findAll();
+        for (Option o :options){
+            if (o.getDateEcheance().isAfter(LocalDateTime.now()) && o.getStatus() == OptionStatus.PENDING){
+                o.setStatus(OptionStatus.EXPIRED);
+                optionRepository.save(o);
+            }
+        }
+    }
 }

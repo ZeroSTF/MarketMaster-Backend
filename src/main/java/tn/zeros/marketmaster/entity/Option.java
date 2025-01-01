@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import tn.zeros.marketmaster.entity.enums.OptionStatus;
 import tn.zeros.marketmaster.entity.enums.OptionType;
 
 import java.io.Serializable;
@@ -28,5 +29,9 @@ public class Option implements Serializable {
     private double premium;
     private double strikePrice; // Prix d'exercice
     private double underlyingPrice;
+    @Enumerated(EnumType.STRING)
+    private OptionStatus status;
+    @PrePersist
+    protected void onCreate(){ status = OptionStatus.PENDING;}
 
 }
