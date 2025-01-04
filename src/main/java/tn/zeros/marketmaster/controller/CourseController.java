@@ -62,12 +62,13 @@ public class CourseController {
         );
     }
 
-    @PutMapping("progress/{progressId}")
+    @PutMapping("/progress")
     public ResponseEntity<UserProgressDTO> updateProgress(
-            @PathVariable Long progressId,
-            @Valid @RequestBody UserProgressDTO progressDTO) {
-        return ResponseEntity.ok(userProgressService.updateProgress(progressId, progressDTO));
+            @RequestBody UserProgressDTO progressDTO) {
+        UserProgressDTO updatedProgress = userProgressService.updateProgress( progressDTO);
+        return ResponseEntity.ok(updatedProgress);
     }
+
 
 
     @GetMapping("/{courseId}/progress/{userId}")
@@ -80,6 +81,8 @@ public class CourseController {
     public ResponseEntity<List<UserProgressDTO>> getAllProgressForUser(@PathVariable String userName) {
         return ResponseEntity.ok(userProgressService.getAllProgressForUser(userName));
     }
+
+
 
 
 }
