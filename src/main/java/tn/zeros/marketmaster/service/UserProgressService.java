@@ -51,7 +51,11 @@ public class UserProgressService {
         UserProgress progress = userProgressRepository.findById(progressId)
                 .orElseThrow(() -> new UserProgressNotFoundException("Progress not found with id: " + progressId));
 
-        progress.setProgress(Math.min(progress.getProgress() + progressDTO.getProgress(), 100));
+        if (progressDTO.getStartDate() != progress.getStartDate()) {
+            progress.setProgress(0);
+        } else {
+            progress.setProgress(Math.min(progress.getProgress() + progressDTO.getProgress(), 100));
+        }
         progress.setScore(progressDTO.getScore());
         progress.setLastAccessed(LocalDateTime.now());
         progress.setStartDate(progressDTO.getStartDate());
