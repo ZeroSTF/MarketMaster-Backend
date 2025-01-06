@@ -70,19 +70,19 @@ public class UserProgressService {
     }
 
 
-    public List<UserProgressDTO> getCourseProgress(Long courseId, Long userId) {
-        if (!courseRepository.existsById(courseId)) {
-            throw new CourseNotFoundException("Course not found with id: " + courseId);
-        }
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException("User not found with id: " + userId);
-        }
+    public List<UserProgressDTO> getCourseProgress(String courseTitle, String userName) {
+        Course course = courseRepository.findByTitle(courseTitle)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with title: " + courseTitle));
 
-        log.info("Fetching progress for course: {} and user: {}", courseId, userId);
-        return userProgressRepository.findByCourseIdAndUserId(courseId, userId).stream()
+        User user = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + userName));
+
+        log.info("Fetching progress for course: {} and user: {}", courseTitle, userName);
+        return userProgressRepository.findByCourseAndUser(course, user).stream()
                 .map(UserProgressDTO::fromEntity)
                 .toList();
     }
+
     public List<UserProgressDTO> getAllProgressForUser(String userName) {
         if (userRepository.findByUsername(userName).isEmpty()) {
             throw new UserNotFoundException("User not found with user name: " + userName);

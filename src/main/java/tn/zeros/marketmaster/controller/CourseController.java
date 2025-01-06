@@ -71,12 +71,13 @@ public class CourseController {
 
 
 
-    @GetMapping("/{courseId}/progress/{userId}")
+    @GetMapping("/{courseTitle}/progress/{userName}")
     public ResponseEntity<List<UserProgressDTO>> getCourseProgress(
-            @PathVariable Long courseId,
-            @PathVariable Long userId) {
-        return ResponseEntity.ok(userProgressService.getCourseProgress(courseId, userId));
+            @PathVariable String courseTitle,
+            @PathVariable String userName) {
+        return ResponseEntity.ok(userProgressService.getCourseProgress(courseTitle, userName));
     }
+
     @GetMapping("/{userName}/progress")
     public ResponseEntity<List<UserProgressDTO>> getAllProgressForUser(@PathVariable String userName) {
         return ResponseEntity.ok(userProgressService.getAllProgressForUser(userName));
