@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -15,9 +14,6 @@ import tn.zeros.marketmaster.entity.Asset;
 import tn.zeros.marketmaster.exception.AssetFetchException;
 import tn.zeros.marketmaster.exception.FlaskServiceRegistrationException;
 import tn.zeros.marketmaster.repository.AssetRepository;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
