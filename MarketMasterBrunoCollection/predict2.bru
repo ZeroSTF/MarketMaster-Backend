@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: http://localhost:5000/api/predict/AAPL
+  url: http://localhost:5000/api/predict/NVDA
   body: json
   auth: bearer
 }
@@ -16,6 +16,6 @@ auth:bearer {
 
 body:json {
   {
-    "train": true
+      "train": true
   }
 }

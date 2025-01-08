@@ -1,0 +1,18 @@
+meta {
+  name: Fetch FinnHub News
+  type: http
+  seq: 26
+}
+
+get {
+  url: http://localhost:5000/api/assets/news?start=2024-01-01&end=2024-02-01&symbols=AAPL&symbols=GOOGL
+  body: none
+  auth: none
+}
+
+params:query {
+  start: 2024-01-01
+  end: 2024-02-01
+  symbols: AAPL
+  symbols: GOOGL
+}

@@ -36,10 +36,10 @@ public class TransactionService {
         return transactionDTOS;
     }
 
-   @Transactional
+    @Transactional
     public TransactionDTO addTransaction(String username, TransactionDTO transactionDTO) {
-       User user = userRepository.findByUsername(username)
-               .orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Portfolio portfolio = user.getPortfolio();
         if (portfolio == null) {
@@ -97,7 +97,7 @@ public class TransactionService {
         if (holding.getQuantity() == 0) {
             portfolio.getHoldings().remove(holding);
         }
-        holdingRepository.save(holding); 
+        holdingRepository.save(holding);
         Asset asset2 = assetRepository.findBySymbol(transactionDTO.getSymbol());
         double totalProceeds = transactionDTO.getQuantity() * transactionDTO.getPrice();
         portfolio.setCash(portfolio.getCash() + totalProceeds);
@@ -124,5 +124,31 @@ public class TransactionService {
                     portfolio.getHoldings().add(newHolding);
                     return newHolding;
                 });
+    }
+
+    private boolean isHoldingAttributesEmpty(Holding holding) {
+        return (holding.getQuantity() == null)  &&
+                (holding.getAverageCostBasis() == null );
+    }
+
+    public TransactionDTO findMaxQuantity(String symbol,String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found for username: " + username));
+        Portfolio portfolio = user.getPortfolio();
+        TransactionDTO transactionDTO=new TransactionDTO();
+        Holding holding=new Holding();
+        Set<Holding> holdings = portfolio.getHoldings();
+        for(Holding holding1 : holdings) {
+            if(holding1.getAsset().equals(assetRepository.findBySymbol(symbol))) {
+               holding=holding1;
+            }
+        }
+        if (isHoldingAttributesEmpty(holding)) {
+            transactionDTO.setPrice(portfolio.getCash());
+        }else{
+        transactionDTO.setSymbol(symbol);
+        transactionDTO.setQuantity(holding.getQuantity());
+        transactionDTO.setPrice(portfolio.getCash());}
+        return transactionDTO;
     }
 }

@@ -35,7 +35,8 @@ public class Portfolio implements Serializable {
 
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Transaction> transactions = new LinkedHashSet<>();
-
+    @OneToMany(cascade = CascadeType.ALL,orphanRemoval = true)
+    private Set<Option> options = new LinkedHashSet<>();
     private double cash;
 
 
