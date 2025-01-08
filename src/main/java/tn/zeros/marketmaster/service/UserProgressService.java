@@ -46,41 +46,43 @@ public class UserProgressService {
         return UserProgressDTO.fromEntity(savedProgress);
     }
 
-    public UserProgressDTO updateProgress(Long progressId, UserProgressDTO progressDTO) {
+    public UserProgressDTO updateProgress(UserProgressDTO progressDTO) {
+        Long progressId = progressDTO.getId();
         UserProgress progress = userProgressRepository.findById(progressId)
                 .orElseThrow(() -> new UserProgressNotFoundException("Progress not found with id: " + progressId));
 
-        int currentProgress = progress.getProgress();
-        int newProgressValue = progressDTO.getProgress();
-        int totalProgress = Math.min(currentProgress + newProgressValue, 100);
-
-        progress.setProgress(totalProgress);
-
-        if (totalProgress >= 100) {
-            progress.setCompleted(true);
-            progress.setEndDate(LocalDateTime.now());
+        if (progressDTO.getStartDate() != progress.getStartDate()) {
+            progress.setProgress(0);
+        } else {
+            progress.setProgress(Math.min(progress.getProgress() + progressDTO.getProgress(), 100));
         }
-
         progress.setScore(progressDTO.getScore());
         progress.setLastAccessed(LocalDateTime.now());
+        progress.setStartDate(progressDTO.getStartDate());
+        progress.setEndDate(progressDTO.getEndDate());
+        progress.setCompleted(progressDTO.isCompleted());
 
-        log.info("Updating progress with id: {}. New progress: {}", progressId, totalProgress);
+        log.info("Updating progress with id: {}. New progress: {}", progressId, progress.getProgress());
+
         UserProgress updatedProgress = userProgressRepository.save(progress);
+
         return UserProgressDTO.fromEntity(updatedProgress);
     }
-    public List<UserProgressDTO> getCourseProgress(Long courseId, Long userId) {
-        if (!courseRepository.existsById(courseId)) {
-            throw new CourseNotFoundException("Course not found with id: " + courseId);
-        }
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException("User not found with id: " + userId);
-        }
 
-        log.info("Fetching progress for course: {} and user: {}", courseId, userId);
-        return userProgressRepository.findByCourseIdAndUserId(courseId, userId).stream()
+
+    public List<UserProgressDTO> getCourseProgress(String courseTitle, String userName) {
+        Course course = courseRepository.findByTitle(courseTitle)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with title: " + courseTitle));
+
+        User user = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + userName));
+
+        log.info("Fetching progress for course: {} and user: {}", courseTitle, userName);
+        return userProgressRepository.findByCourseAndUser(course, user).stream()
                 .map(UserProgressDTO::fromEntity)
                 .toList();
     }
+
     public List<UserProgressDTO> getAllProgressForUser(String userName) {
         if (userRepository.findByUsername(userName).isEmpty()) {
             throw new UserNotFoundException("User not found with user name: " + userName);
@@ -90,6 +92,14 @@ public class UserProgressService {
         return userProgressRepository.findByUserUsername(userName).stream()
                 .map(UserProgressDTO::fromEntity)
                 .toList();
+    }
+
+    public void deleteProgress(String userName, String courseTitle) {
+        UserProgress progress = userProgressRepository.findByUserUsernameAndCourseTitle(userName, courseTitle)
+                .orElseThrow(() -> new UserProgressNotFoundException("No progress found for user: " + userName + " and course: " + courseTitle));
+
+        log.info("Deleting progress for user: {} and course: {}", userName, courseTitle);
+        userProgressRepository.delete(progress);
     }
 
 
