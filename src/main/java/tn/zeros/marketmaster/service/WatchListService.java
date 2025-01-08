@@ -7,16 +7,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import tn.zeros.marketmaster.dto.AssetDTO;
 import tn.zeros.marketmaster.dto.PageResponseDTO;
 import tn.zeros.marketmaster.dto.RegisterAssetsRequest;
-import tn.zeros.marketmaster.dto.WatchListDTO;
 import tn.zeros.marketmaster.entity.Asset;
-import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.entity.UserWatchlist;
+import tn.zeros.marketmaster.exception.AssetFetchException;
 import tn.zeros.marketmaster.exception.FlaskServiceRegistrationException;
 import tn.zeros.marketmaster.repository.UserWatchlistRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,41 +27,113 @@ public class WatchListService {
     private final UserWatchlistRepository watchlistRepository;
     private final WebClient webClient;
 
-    public PageResponseDTO<WatchListDTO> getWatchlistByUser(String username, int page, int size) {
-        // Fetch paginated watchlist entries for the user
-        Page<UserWatchlist> watchlistPage = watchlistRepository.findByUser_Username(username, PageRequest.of(page, size));
+    public PageResponseDTO<AssetDTO> getUserWatchlist(String username, Integer page, Integer size) {
+        try {
+            // 1. Get paginated watchlist items from database
+            Page<UserWatchlist> watchlistPage = findByUsername(username, PageRequest.of(page, size));
+            List<String> symbols = watchlistPage.getContent().stream()
+                    .map(watchlist -> watchlist.getAsset().getSymbol())
+                    .collect(Collectors.toList());
 
-        // Map UserWatchlist entities to DTOs
-        List<WatchListDTO> watchlistDTOs = watchlistPage.stream()
-                .map(WatchListDTO::fromEntity)
-                .collect(Collectors.toList());
+            // 2. Register assets with Flask service
+            registerAssetsWithFlask(symbols)
+                    .doOnError(error -> log.error("Failed to register watchlist assets with Flask service", error))
+                    .subscribe();
 
-        // Extract asset symbols for Flask service registration
-        List<String> assetSymbols = watchlistPage.stream()
-                .map(userWatchlist -> userWatchlist.getAsset().getSymbol())
-                .collect(Collectors.toList());
+            // 3. Fetch current asset data from Flask
+            Map<String, Map<String, Object>> flaskData = fetchAssetsDataFromFlask();
 
-        // Register assets with Flask service asynchronously
-        registerAssetsWithFlask(assetSymbols)
-                .doOnTerminate(() -> log.info("Asset registration with Flask service completed"))
-                .subscribe(
-                        success -> log.info("Assets registered successfully with Flask service"),
-                        error -> log.error("Failed to register assets with Flask service", error)
-                );
+            // 4. Combine database and Flask data
+            List<AssetDTO> enrichedAssets = watchlistPage.getContent().stream()
+                    .map(watchlist -> enrichAssetWithFlaskData(watchlist.getAsset(), flaskData.get(watchlist.getAsset().getSymbol())))
+                    .collect(Collectors.toList());
 
-        // Return paginated response with watchlist DTOs
-        return new PageResponseDTO<>(
-                watchlistDTOs,
-                watchlistPage.getNumber(),
-                watchlistPage.getSize(),
-                watchlistPage.getTotalElements(),
-                watchlistPage.getTotalPages(),
-                watchlistPage.isLast()
-        );
+            return new PageResponseDTO<>(
+                    enrichedAssets,
+                    watchlistPage.getNumber(),
+                    watchlistPage.getSize(),
+                    watchlistPage.getTotalElements(),
+                    watchlistPage.getTotalPages(),
+                    watchlistPage.isLast()
+            );
+        } catch (Exception e) {
+            log.error("Error fetching watchlist for user: {}", username, e);
+            throw new AssetFetchException("Failed to fetch watchlist", e);
+        }
     }
 
+    private Page<UserWatchlist> findByUsername(String username, PageRequest pageRequest) {
+        try {
+            return watchlistRepository.findByUser_Username(username, pageRequest);
+        } catch (Exception e) {
+            log.error("Error fetching watchlist with pagination for user {}: {}", username, e.getMessage());
+            throw new AssetFetchException("Failed to fetch watchlist", e);
+        }
+    }
 
+    private Map<String, Map<String, Object>> fetchAssetsDataFromFlask() {
+        try {
+            List<Map<String, Object>> flaskResponse = webClient.get()
+                    .uri("/api/assets/data")
+                    .retrieve()
+                    .bodyToMono(List.class)
+                    .block();
 
+            return flaskResponse.stream().collect(Collectors.toMap(
+                    entry -> (String) entry.get("symbol"),
+                    entry -> entry
+            ));
+        } catch (Exception e) {
+            log.error("Failed to fetch data from Flask service", e);
+            throw new FlaskServiceRegistrationException("Failed to fetch asset data from Flask", e);
+        }
+    }
+
+    private AssetDTO enrichAssetWithFlaskData(Asset asset, Map<String, Object> flaskData) {
+        AssetDTO.AssetDTOBuilder builder = AssetDTO.builder()
+                .id(asset.getId())
+                .symbol(asset.getSymbol())
+                .name(asset.getName());
+
+        if (flaskData != null) {
+            builder
+                    .openPrice(parseDouble(flaskData.get("openPrice")))
+                    .dayHigh(parseDouble(flaskData.get("dayHigh")))
+                    .dayLow(parseDouble(flaskData.get("dayLow")))
+                    .averageVolume(parseDouble(flaskData.get("averageVolume")))
+                    .currentPrice(parseDouble(flaskData.get("currentPrice")))
+                    .volume(parseLong(flaskData.get("volume")))
+                    .previousClose(parseDouble(flaskData.get("previousClose")))
+                    .priceChange(parseDouble(flaskData.get("priceChange")))
+                    .priceChangePercent(parseDouble(flaskData.get("priceChangePercent")))
+                    .marketCap(parseDouble(flaskData.get("marketCap")))
+                    .peRatio(parseDouble(flaskData.get("peRatio")))
+                    .dividendYieldPercent(parseDouble(flaskData.get("dividendYieldPercent")))
+                    .beta(parseDouble(flaskData.get("beta")))
+                    .yearHigh(parseDouble(flaskData.get("yearHigh")))
+                    .yearLow(parseDouble(flaskData.get("yearLow")))
+                    .sector(flaskData.get("sector").toString());
+        }
+        return builder.build();
+    }
+
+    private Double parseDouble(Object value) {
+        try {
+            return value != null ? Double.parseDouble(value.toString()) : null;
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse double value: {}", value);
+            return null;
+        }
+    }
+
+    private Long parseLong(Object value) {
+        try {
+            return value != null ? Long.parseLong(value.toString()) : null;
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse long value: {}", value);
+            return null;
+        }
+    }
 
     private Mono<Void> registerAssetsWithFlask(List<String> symbols) {
         return webClient.post()
