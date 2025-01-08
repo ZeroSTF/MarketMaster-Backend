@@ -16,6 +16,7 @@ import tn.zeros.marketmaster.exception.AssetFetchException;
 import tn.zeros.marketmaster.exception.FlaskServiceRegistrationException;
 import tn.zeros.marketmaster.repository.AssetRepository;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,22 +31,27 @@ public class AssetService {
 
     public PageResponseDTO<AssetDTO> getAllAssets(Integer page, Integer size) {
         try {
+            // 1. Get paginated assets from database
             Page<Asset> assetPage = findAll(PageRequest.of(page, size));
-
             List<String> symbols = assetPage.getContent().stream()
                     .map(Asset::getSymbol)
                     .collect(Collectors.toList());
 
+            // 2. Register assets with Flask service
             registerAssetsWithFlask(symbols)
-                    .subscribe(
-                            success -> log.debug("Assets registered successfully with Flask service"),
-                            error -> log.error("Failed to register assets with Flask service", error)
-                    );
+                    .doOnError(error -> log.error("Failed to register assets with Flask service", error))
+                    .subscribe();
+
+            // 3. Fetch current asset data from Flask
+            Map<String, Map<String, Object>> flaskData = fetchAssetsDataFromFlask();
+
+            // 4. Combine database and Flask data
+            List<AssetDTO> enrichedAssets = assetPage.getContent().stream()
+                    .map(asset -> enrichAssetWithFlaskData(asset, flaskData.get(asset.getSymbol())))
+                    .collect(Collectors.toList());
 
             return new PageResponseDTO<>(
-                    assetPage.getContent().stream()
-                            .map(AssetDTO::fromEntity)
-                            .collect(Collectors.toList()),
+                    enrichedAssets,
                     assetPage.getNumber(),
                     assetPage.getSize(),
                     assetPage.getTotalElements(),
@@ -55,6 +61,59 @@ public class AssetService {
         } catch (Exception e) {
             log.error("Error fetching assets", e);
             throw new AssetFetchException("Failed to fetch assets", e);
+        }
+    }
+
+    private Map<String, Map<String, Object>> fetchAssetsDataFromFlask() {
+        try {
+            List<Map<String, Object>> flaskResponse = webClient.get()
+                    .uri("/api/assets/data")
+                    .retrieve()
+                    .bodyToMono(List.class)
+                    .block();
+
+            return flaskResponse.stream().collect(Collectors.toMap(
+                    entry -> (String) entry.get("symbol"),
+                    entry -> entry
+            ));
+        } catch (Exception e) {
+            log.error("Failed to fetch data from Flask service", e);
+            throw new FlaskServiceRegistrationException("Failed to fetch asset data from Flask", e);
+        }
+    }
+
+    private AssetDTO enrichAssetWithFlaskData(Asset asset, Map<String, Object> flaskData) {
+        AssetDTO.AssetDTOBuilder builder = AssetDTO.builder()
+                .id(asset.getId())
+                .symbol(asset.getSymbol())
+                .name(asset.getName());
+
+        if (flaskData != null) {
+            builder
+                    .currentPrice(parseDouble(flaskData.get("currentPrice")))
+                    .change(parseDouble(flaskData.get("priceChange")))
+                    .changePercent(parseDouble(flaskData.get("priceChangePercent")))
+                    .volume(parseLong(flaskData.get("volume")))
+                    .lastUpdated(LocalDateTime.parse((String) flaskData.get("timestamp")));
+        }
+        return builder.build();
+    }
+
+    private Double parseDouble(Object value) {
+        try {
+            return value != null ? Double.parseDouble(value.toString()) : null;
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse double value: {}", value);
+            return null;
+        }
+    }
+
+    private Long parseLong(Object value) {
+        try {
+            return value != null ? Long.parseLong(value.toString()) : null;
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse long value: {}", value);
+            return null;
         }
     }
 
