@@ -1,14 +1,15 @@
 package tn.zeros.marketmaster.dto;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class NewsArticleDto {
     private String id ;
     private String category;
@@ -18,9 +19,8 @@ public class NewsArticleDto {
     private String summary;
     private String url;
     private String image;
-    private long datetime;  // The Unix timestamp (seconds)
+    private long datetime;
 
-    // You can add methods to convert the Unix timestamp to LocalDateTime if needed
     public LocalDateTime getPublishedDate() {
         return Instant.ofEpochSecond(this.datetime)
                 .atZone(ZoneId.systemDefault())

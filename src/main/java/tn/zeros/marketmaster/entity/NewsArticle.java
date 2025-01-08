@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
+
 public class NewsArticle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

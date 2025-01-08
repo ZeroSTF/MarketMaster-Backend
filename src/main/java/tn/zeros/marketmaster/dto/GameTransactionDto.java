@@ -10,21 +10,19 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class GameTransactionDto {
-    private Long id;
+    private Long gameId;
     private String symbol;
-    private TransactionType type; // BUY or SELL
+    private TransactionType type;
     private int quantity;
-    private double price; // Price per unit
     private LocalDateTime simulationTimestamp;
-    private LocalDateTime realTimestamp;
+    private String username; // New field to identify the user
 
     public GameTransactionDto(GameTransaction transaction) {
-        this.id = transaction.getId();
+        this.gameId = transaction.getId();
         this.symbol = transaction.getAsset().getSymbol();
         this.type = transaction.getType();
         this.quantity = transaction.getQuantity();
-        this.price = transaction.getPrice();
         this.simulationTimestamp = transaction.getSimulationTimestamp();
-        this.realTimestamp = transaction.getRealTimestamp();
+
     }
 }

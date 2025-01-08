@@ -12,10 +12,14 @@ import tn.zeros.marketmaster.entity.Game;
 import tn.zeros.marketmaster.entity.User;
 import tn.zeros.marketmaster.exception.UserNotFoundException;
 import tn.zeros.marketmaster.repository.UserRepository;
+import tn.zeros.marketmaster.service.GameResultsService;
 import tn.zeros.marketmaster.service.GameService;
+import tn.zeros.marketmaster.service.GameTransactionService;
 import tn.zeros.marketmaster.service.JwtTokenService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +28,9 @@ public class GameController {
 
 
     private final GameService gameService;
+    private final GameTransactionService gameTransactionService;
+    private final GameResultsService gameResultsService ;
+
 
     @PostMapping("/create")
     public ResponseEntity<?> createGame(@RequestBody NewGameDto game) {
@@ -93,7 +100,7 @@ public class GameController {
         return ResponseEntity.ok(gameState);
     }
 
-    @PostMapping("/{gameId}/market-data")
+    @PostMapping("/market-data")
     public ResponseEntity<MarketDataResponseDto> getMarketData(@RequestBody MarketDataRequestDto request) {
         return ResponseEntity.ok(gameService.getMarketData(request));
     }
@@ -106,6 +113,36 @@ public class GameController {
         } else {
             return ResponseEntity.status(400).build();
         }
+    }
+    @GetMapping("/news/{gameId}")
+    public ResponseEntity<List<NewsArticleResponseDto>> getNewsByGame(@PathVariable Long gameId) {
+        List<NewsArticleResponseDto> newsArticles = gameService.getNewsByGameId(gameId);
+        return ResponseEntity.ok(newsArticles);
+    }
+    @PostMapping("/transaction")
+    public ResponseEntity<Map<String, String>> processTransaction(@RequestBody GameTransactionDto transactionRequest) {
+        try {
+            gameTransactionService.processTransaction(transactionRequest);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Transaction processed successfully");
+            return ResponseEntity.ok(response); // Return JSON response
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Transaction failed: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response); // Return JSON response
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "An unexpected error occurred: " + e.getMessage());
+            return ResponseEntity.status(500).body(response); // Return JSON response
+        }
+    }
+
+    @GetMapping("/{gameId}/results")
+    public GameResultsDto getGameResults(
+            @PathVariable Long gameId,
+            @RequestParam String username // Use username as a query parameter
+    ) {
+        return gameResultsService.getGameResults(gameId, username);
     }
 
 }
