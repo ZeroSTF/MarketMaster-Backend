@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import tn.zeros.marketmaster.entity.Game;
 import tn.zeros.marketmaster.entity.GameParticipation;
+import tn.zeros.marketmaster.entity.GamePortfolio;
 import tn.zeros.marketmaster.entity.User;
 
 import java.time.LocalDateTime;
@@ -30,4 +31,5 @@ public interface GameParticipationRepository extends JpaRepository<GameParticipa
                                          @Param("gameId") Long gameId);
 
     Optional<GameParticipation> findByGameAndUser(Game game, User user);
+
 }

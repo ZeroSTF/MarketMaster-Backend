@@ -20,6 +20,7 @@ public class TransactionDTO {
     double price;
     LocalDateTime timeStamp;
     TransactionType type;
+
     @Override
     public String toString() {
         return "TransactionDTO{" +

@@ -23,6 +23,7 @@ import tn.zeros.marketmaster.entity.enums.GameStatus;
 import tn.zeros.marketmaster.exception.GameNotFoundException;
 import tn.zeros.marketmaster.repository.*;
 
+import javax.sound.sampled.Port;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -44,6 +45,7 @@ public class GameService {
     private final RestTemplate restTemplate;
     private final PortfolioRepository portfolioRepository;
     private final NewsArticleRepository newsArticleRepository ;
+    private final GameHoldingRespository gameHoldingRespository;
 
     private static final String FLASK_API_URL_HISTORY = "http://localhost:5000/api/assets/history";
     private static final String FLASK_API_URL_NEWS = "http://localhost:5000/api/assets/news";
@@ -61,10 +63,15 @@ public class GameService {
                 .orElseThrow(() -> new EntityNotFoundException("Participation not found for user in this game"));
 
         GamePortfolio portfolio = gamePortfolioRepository.findByUserAndGame(user, game)
-                .orElseThrow(() -> new EntityNotFoundException("portfolio not found for user in this game"));;
+                .orElseThrow(() -> new EntityNotFoundException("Portfolio not found for user in this game"));
+
+        // Fetch the latest MarketData timestamp for the game
+        LocalDateTime lastMarketDataTimestamp = marketDataRepository
+                .findLastMarketDataTimestampByGameId(gameId)
+                .orElse(null); // Use null or a default value if no MarketData exists
 
         return GameStateDto.builder()
-                .gameMetadata(new GameMetadataDto(game))
+                .gameMetadata(new GameMetadataDto(game, lastMarketDataTimestamp)) // Include the lastMarketDataTimestamp
                 .gameParticipation(new GameParticipationDto(participation))
                 .gamePortfolio(new GamePortfolioDto(portfolio))
                 .build();
@@ -122,6 +129,8 @@ public class GameService {
         game.setCreator(creator);
         game.setCreationTimestamp(LocalDateTime.now());
         game.setStatus(GameStatus.ACTIVE);
+        game.setSimulationStartDate(simulationStartDate);
+
 
         // Save the game to get its ID
         Game createdGame = gameRepository.save(game);
@@ -165,6 +174,7 @@ public class GameService {
         participation.setActive(true);
         participation.setTotalPlayTime(Duration.ZERO);
         participation.setUser(creator);
+        participation.setLastPauseTimestamp(game.getSimulationStartDate().atTime(12,0));
         gameParticipationRepository.save(participation);
 
         // Return the response DTO
@@ -344,6 +354,7 @@ public class GameService {
         participation.setActive(true);
         participation.setTotalPlayTime(Duration.ZERO); // Initial play time
         participation.setUser(user);
+        participation.setLastPauseTimestamp(game.getSimulationStartDate().atTime(12,0));
         gameParticipationRepository.save(participation);
 
 
@@ -402,6 +413,7 @@ public class GameService {
 
         List<GamePortfolio> portfolios = gamePortfolioRepository.findByGame(game);
 
+
         // Calculate profit for each portfolio and sort by profit
         return portfolios.stream()
                 .map(portfolio -> {
@@ -414,12 +426,53 @@ public class GameService {
 
     // Helper method to calculate profit based on holdings and transactions
     private BigDecimal calculateProfit(GamePortfolio portfolio) {
-        // Calculate profit using holdings, initial cash, and other factors
-        // This is a placeholder; actual profit calculation logic will depend on your requirements
-        BigDecimal initialCash = BigDecimal.valueOf(10000); // Assuming an initial cash balance
-        BigDecimal currentCash = BigDecimal.valueOf(portfolio.getCash());
-        return currentCash.subtract(initialCash); // Replace with actual profit calculation
+        BigDecimal initialCash = BigDecimal.valueOf(10000); // Replace with actual initial cash value
+        BigDecimal currentCash = BigDecimal.valueOf(portfolio.getCash()).add(totalHoldingsFinalValue(portfolio));
+
+        // Calculate profit and round to 2 decimal places
+        return currentCash.subtract(initialCash).setScale(2, RoundingMode.HALF_UP);
     }
+
+
+
+    @Transactional
+    public BigDecimal totalHoldingsFinalValue(GamePortfolio portfolio) {
+        logger.info("Calculating total holdings final value for portfolio: {}", portfolio.getId());
+
+        Set<GameHolding> holdings = portfolio.getGameHoldings();
+        logger.info("Retrieved {} holdings for portfolio: {}", holdings.size(), portfolio.getId());
+        User user = portfolio.getUser();
+        Game game = portfolio.getGame();
+
+        BigDecimal totalFinalValue = BigDecimal.ZERO;
+GameParticipation participation = gameParticipationRepository.findByGameAndUser(game , user).orElseThrow(()->new GameNotFoundException("game not found "));
+        for (GameHolding holding : holdings) {
+            Asset asset = holding.getAsset();
+            Integer quantity = holding.getQuantity();
+
+            logger.info("Processing holding: Asset ID = {}, Quantity = {}", asset.getId(), quantity);
+
+            // Fetch the latest market data for the asset in the current game
+            MarketData latestMarketData = marketDataRepository.findTopByAssetAndGameAndTimestampBeforeOrderByTimestampDesc(asset, portfolio.getGame(),participation.getLastPauseTimestamp()).orElseThrow(() -> new GameNotFoundException("No market data found for asset before timestamp"));
+            ;
+
+            if (latestMarketData != null) {
+                BigDecimal latestPrice = BigDecimal.valueOf(latestMarketData.getClose());
+                BigDecimal holdingValue = latestPrice.multiply(BigDecimal.valueOf(quantity));
+                totalFinalValue = totalFinalValue.add(holdingValue);
+
+                logger.info("Latest market price for asset {}: {}. Holding value: {}", asset.getId(), latestPrice, holdingValue);
+            } else {
+                logger.info("No market data found for asset ID {} in game ID {}", asset.getId(), portfolio.getGame().getId());
+            }
+        }
+
+        logger.info("Total final value for portfolio {}: {}", portfolio.getId(), totalFinalValue);
+        return totalFinalValue;
+    }
+
+
+
     @Transactional
     public List<LeaderboardEntryDto> getGlobalLeaderboard() {
         // Retrieve all unique users
@@ -668,4 +721,20 @@ public class GameService {
 
         return false;
     }
+    public List<NewsArticleResponseDto> getNewsByGameId(Long gameId) {
+        List<NewsArticle> newsArticles = newsArticleRepository.findByGameId(gameId);
+        return newsArticles.stream()
+                .map(news -> NewsArticleResponseDto.builder()
+                        .id(news.getId())
+                        .category(news.getCategory())
+                        .headline(news.getHeadline())
+                        .source(news.getSource())
+                        .related(news.getRelated())
+                        .url(news.getUrl())
+                        .image(news.getImage())
+                        .publishedDate(news.getPublishedDate())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 }

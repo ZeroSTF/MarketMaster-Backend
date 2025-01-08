@@ -27,4 +27,6 @@ public interface GamePortfolioRepository extends JpaRepository<GamePortfolio,Lon
     Optional<GamePortfolio> findByUserUsernameAndGameId(String username, Long gameId);
 
     List<GamePortfolio> findByGameId(Long gameId);
+    Optional<GamePortfolio> findByGameAndUser(Game game, User user);
+
 }
