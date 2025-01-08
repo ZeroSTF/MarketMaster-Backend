@@ -90,11 +90,22 @@ public class AssetService {
 
         if (flaskData != null) {
             builder
+                    .openPrice(parseDouble(flaskData.get("openPrice")))
+                    .dayHigh(parseDouble(flaskData.get("dayHigh")))
+                    .dayLow(parseDouble(flaskData.get("dayLow")))
+                    .averageVolume(parseDouble(flaskData.get("averageVolume")))
                     .currentPrice(parseDouble(flaskData.get("currentPrice")))
-                    .change(parseDouble(flaskData.get("priceChange")))
-                    .changePercent(parseDouble(flaskData.get("priceChangePercent")))
                     .volume(parseLong(flaskData.get("volume")))
-                    .lastUpdated(LocalDateTime.parse((String) flaskData.get("timestamp")));
+                    .previousClose(parseDouble(flaskData.get("previousClose")))
+                    .priceChange(parseDouble(flaskData.get("priceChange")))
+                    .priceChangePercent(parseDouble(flaskData.get("priceChangePercent")))
+                    .marketCap(parseDouble(flaskData.get("marketCap")))
+                    .peRatio(parseDouble(flaskData.get("peRatio")))
+                    .dividendYieldPercent(parseDouble(flaskData.get("dividendYieldPercent")))
+                    .beta(parseDouble(flaskData.get("beta")))
+                    .yearHigh(parseDouble(flaskData.get("yearHigh")))
+                    .yearLow(parseDouble(flaskData.get("yearLow")))
+                    .sector(flaskData.get("sector").toString());
         }
         return builder.build();
     }
