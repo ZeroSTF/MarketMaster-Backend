@@ -1,5 +1,6 @@
 package tn.zeros.marketmaster.service;
 
+import io.netty.handler.timeout.ReadTimeoutException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -24,12 +25,21 @@ import tn.zeros.marketmaster.repository.PortfolioRepository;
 import tn.zeros.marketmaster.repository.UserRepository;
 
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import reactor.netty.http.client.HttpClient;
+import reactor.util.retry.Retry;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import java.io.IOException;
 
+import java.util.concurrent.TimeUnit;
 import static tn.zeros.marketmaster.entity.enums.OptionType.CALL;
 
 @Service
@@ -85,50 +95,63 @@ public class OptionService {
         return savedOption;
     }
     public Double getOptionPrime(Option option) {
-
         Map<String, String> requestBody = new HashMap<>();
         requestBody.put("symbol", option.getSymbol());
         requestBody.put("strike_price", String.valueOf(option.getStrikePrice()));
         requestBody.put("expiration_date", option.getDateEcheance().format(DateTimeFormatter.ISO_LOCAL_DATE));
         requestBody.put("option_type", option.getType().toString());
 
+        log.info("Calculating option premium for request: {}", requestBody);
+
         return webClient.post()
                 .uri("/api/assets/calculate_option_premium")
-                .contentType(MediaType.APPLICATION_JSON) // Set content type to application/json
-                .bodyValue(requestBody) // Pass the request body
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
                 .retrieve()
-                .onStatus(status -> !status.is2xxSuccessful(), response ->
-                        response.bodyToMono(String.class)
-                                .flatMap(errorResponse -> {
-                                    log.error("Error response from Flask: {}", errorResponse);
-                                    return Mono.error(new FlaskServiceRegistrationException("Flask service registration failed: " + errorResponse));
-                                })
-                )
-                .bodyToMono(Map.class) // Deserialize the response as a Map
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
+                        .filter(throwable -> throwable instanceof ReadTimeoutException
+                                || throwable instanceof IOException)
+                        .doBeforeRetry(retrySignal ->
+                                log.warn("Retrying request after error, attempt {}",
+                                        retrySignal.totalRetries() + 1)))
+                .timeout(Duration.ofSeconds(15))
                 .map(responseMap -> {
-                    // Extract the premium value from the response map
-                    if (responseMap.containsKey("premium")) {
-                        Object premiumValue = responseMap.get("premium");
-                        if (premiumValue instanceof Number) {
-                            return ((Number) premiumValue).doubleValue();
-                        } else {
-                            throw new IllegalArgumentException("Invalid premium value format");
-                        }
-                    } else {
-                        throw new IllegalArgumentException("Response missing 'premium' key");
+                    log.info("Received response: {}", responseMap);
+                    if (!responseMap.containsKey("premium")) {
+                        throw new IllegalStateException("Response missing premium");
                     }
+
+                    Object premiumValue = responseMap.get("premium");
+                    if (premiumValue == null) {
+                        throw new IllegalStateException("Premium value is null");
+                    }
+
+                    double premium;
+                    if (premiumValue instanceof Number) {
+                        premium = ((Number) premiumValue).doubleValue();
+                    } else if (premiumValue instanceof String) {
+                        premium = Double.parseDouble((String) premiumValue);
+                    } else {
+                        throw new IllegalStateException("Invalid premium value type: " +
+                                premiumValue.getClass().getName());
+                    }
+
+                    if (premium <= 0) {
+                        throw new IllegalStateException("Invalid premium value: " + premium);
+                    }
+
+                    return premium;
                 })
-                .doOnSubscribe(subscription ->
-                        log.info("Sending request to Flask API for symbol: {}", option.getSymbol()))
-                .doOnSuccess(result ->
-                        log.info("Successfully received option premium for symbol: {}, premium: {}", option.getSymbol(), result))
-                .doOnError(error ->
-                        log.error("Error calling Flask API: {}", error.getMessage()))
-                .onErrorResume(e -> {
-                    log.warn("Returning default value due to error for symbol: {}", option.getSymbol());
-                    return Mono.just(0.0); // Return a default value in case of error
-                })
-                .block(); // Make the call synchronous // This makes the call synchronous and returns the value directly
+                .doOnError(error -> log.error("Error calculating premium: {}",
+                        error.getMessage()))
+                .onErrorMap(ReadTimeoutException.class, ex ->
+                        new FlaskServiceRegistrationException(
+                                "Flask service timeout after retries: " + ex.getMessage()))
+                .onErrorMap(Exception.class, ex ->
+                        new FlaskServiceRegistrationException(
+                                "Flask service error: " + ex.getMessage()))
+                .block(Duration.ofSeconds(20));  // Overall timeout including retries
     }
     public TransactionDTO applyOption(Option option ,String username){
         User user = userRepository.findByUsername(username)
@@ -140,7 +163,7 @@ public class OptionService {
             throw new PortfolioNotFoundException("Portfolio not found for user: " + username);
         }
         TransactionDTO transactionDTO = new TransactionDTO();
-        transactionDTO.setPrice(option.getStrikePrice());
+        transactionDTO.setPrice(option.getStrikePrice()*100);
         transactionDTO.setSymbol(option.getSymbol());
         transactionDTO.setTimeStamp(LocalDateTime.now());
         transactionDTO.setQuantity(100);
